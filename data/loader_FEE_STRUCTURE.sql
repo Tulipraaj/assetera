@@ -1,0 +1,5 @@
+
+COPY INTO FEE_STRUCTURE (Asset_Class_ID,Flat_Fee,Percentage_Fee)
+FROM @repo_stage/Fee_Structures.csv
+FILE_FORMAT = (TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"')
+ON_ERROR = 'ABORT_STATEMENT';

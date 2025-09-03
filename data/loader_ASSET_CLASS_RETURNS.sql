@@ -1,0 +1,6 @@
+-- COPY INTO loader command for ASSET_CLASS_RETURNS
+COPY INTO ASSET_CLASS_RETURNS (ASSET_CLASS_ID, ASSET_CLASS_NAME, AVG_RETURN_10Y, STD_DEV_10Y)
+FROM @repo_stage/Asset_Class_Returns.csv
+FILE_FORMAT = (TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"')
+ON_ERROR = 'ABORT_STATEMENT';
+--------------------------------------------------------
