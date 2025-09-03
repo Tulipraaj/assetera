@@ -1,0 +1,36 @@
+QUESTION_ID,Answer_ID,ANSWER_TEXT,Risk_Profile_ID
+1,1,1-5 Years,1
+1,2,5-10 Years,2
+1,3,10-15 Years,3
+1,4,15-20 Years,4
+1,5,20+ Years,5
+2,1,"Doesn’t really matter, I’m in it for the long haul",4
+2,2,I’m reaching for the phone to call my advisor,2
+2,3,"Sell it all, cash is the place for me",1
+2,4,I feel a little nervous about it,3
+2,5,Buy more!,5
+3,1,Sell it all and move to safety,1
+3,2,Divest the declining positions,3
+3,4,Wait it out/Do nothing,4
+3,5,Invest in the positions that have declined the most,5
+4,1,It’s all I have,1
+4,2,I have an emergency fund as well,2
+4,4,"It’s a piece of the picture, I also have real estate",2
+4,5,Who has the funds to save for retirement?,3
+5,1,Increase significantly,5
+5,2,Improve,4
+5,3,Stay the same,3
+5,4,Decease,2
+5,5,Decline substantially,1
+6,2,Not likely to take on more risk,2
+6,3,Take a little risk with a small portion of the portfolio,3
+6,4,Take significantly more risk with some of the portfolio,4
+6,5,Take a lot more risk with the whole portfolio,5
+7,1,I don’t monitor my investment accounts and I don’t have them reviewed,5
+7,2,I take a look at the statement every once in a while,4
+7,3,I review my statements regularly,3
+7,4,I review my statements regularly and have my portfolio reviewed annually,2
+8,2,Little to no experience,2
+8,3,"Some experience, but only in mutual funds",3
+8,4,Experienced in mutual funds and some individual stocks and bonds,4
+8,5,Vast knowledge and experience with many types of investments,5

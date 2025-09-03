@@ -1,0 +1,9 @@
+ASSET_CLASS_ID,ASSET_CLASS_NAME,AVG_RETURN_10Y,STD_DEV_10Y
+1,Bonds,4.44,3.29
+2,Large Cap,7.85,14.32
+3,US Mid Cap,9.55,17.68
+4,US Small Cap,9.22,19.55
+5,Large Foreign,2.26,18.21
+6,Emerging,5.57,23.6
+7,Commodities,-2.62,18.11
+8,S1,7.89,14.74
