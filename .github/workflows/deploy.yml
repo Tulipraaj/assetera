@@ -10,9 +10,55 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
+      # 1. Checkout repo
       - uses: actions/checkout@v4
 
+      # 2. Install SnowSQL
+      - name: Install SnowSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.29-linux_x86_64.bash
+          bash snowsql-1.2.29-linux_x86_64.bash -b -p $HOME/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          snowsql -v
+
+      # 3. Upload CSV files into Snowflake stage
+      - name: Upload CSVs to Snowflake
+        env:
+          SNOW_ACCOUNT: ${{ secrets.SNOW_ACCOUNT }}
+          SNOW_USER: ${{ secrets.SNOW_USER }}
+          SNOW_PASSWORD: ${{ secrets.SNOW_PASSWORD }}
+          SNOW_ROLE: ${{ secrets.SNOW_ROLE }}
+          SNOW_WAREHOUSE: ${{ secrets.SNOW_WAREHOUSE }}
+          SNOW_DATABASE: ${{ secrets.SNOW_DATABASE }}
+          SNOW_SCHEMA: ${{ secrets.SNOW_SCHEMA }}
+        run: |
+          snowsql -a $SNOW_ACCOUNT -u $SNOW_USER -p $SNOW_PASSWORD \
+            -r $SNOW_ROLE -w $SNOW_WAREHOUSE -d $SNOW_DATABASE -s $SNOW_SCHEMA \
+            -q "CREATE STAGE IF NOT EXISTS repo_stage FILE_FORMAT=(TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='\"');"
+          snowsql -a $SNOW_ACCOUNT -u $SNOW_USER -p $SNOW_PASSWORD \
+            -r $SNOW_ROLE -w $SNOW_WAREHOUSE -d $SNOW_DATABASE -s $SNOW_SCHEMA \
+            -q "PUT file://data/csv/*.csv @repo_stage AUTO_COMPRESS=TRUE OVERWRITE=TRUE;"
+
+      # 4. Verify staged files
+      - name: Verify staged files
+        env:
+          SNOW_ACCOUNT: ${{ secrets.SNOW_ACCOUNT }}
+          SNOW_USER: ${{ secrets.SNOW_USER }}
+          SNOW_PASSWORD: ${{ secrets.SNOW_PASSWORD }}
+          SNOW_ROLE: ${{ secrets.SNOW_ROLE }}
+          SNOW_WAREHOUSE: ${{ secrets.SNOW_WAREHOUSE }}
+          SNOW_DATABASE: ${{ secrets.SNOW_DATABASE }}
+          SNOW_SCHEMA: ${{ secrets.SNOW_SCHEMA }}
+        run: |
+          snowsql -a $SNOW_ACCOUNT -u $SNOW_USER -p $SNOW_PASSWORD \
+            -r $SNOW_ROLE -w $SNOW_WAREHOUSE -d $SNOW_DATABASE -s $SNOW_SCHEMA \
+            -q "LIST @repo_stage;"
+
+      # 5. Run Snowflake Python connector scripts
       - name: Install Snowflake Python Connector
         run: pip install snowflake-connector-python
 
