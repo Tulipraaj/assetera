@@ -1,0 +1,9 @@
+-- Create file format for CSVs
+CREATE OR REPLACE FILE FORMAT CSV_FORMAT
+  TYPE = CSV
+  FIELD_OPTIONALLY_ENCLOSED_BY='"'
+  SKIP_HEADER = 1;
+
+-- Stage to hold repo-uploaded CSVs
+CREATE OR REPLACE STAGE repo_stage
+  FILE_FORMAT = CSV_FORMAT;
