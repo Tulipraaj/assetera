@@ -1,0 +1,66 @@
+name: Snowflake Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SnowSQL
+        run: |
+          curl -L https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.28-linux_x86_64.bash | bash
+          echo "$HOME/.snowsql" >> $GITHUB_PATH
+
+      - name: Configure SnowSQL
+        run: |
+          mkdir -p ~/.snowsql
+          cat > ~/.snowsql/config <<EOF
+          [connections.dev]
+          accountname = ${{ secrets.SNOW_ACCOUNT }}
+          username = ${{ secrets.SNOW_USER }}
+          password = ${{ secrets.SNOW_PASSWORD }}
+          rolename = ${{ secrets.SNOW_ROLE }}
+          warehousename = ${{ secrets.SNOW_WAREHOUSE }}
+          dbname = ${{ secrets.SNOW_DATABASE }}
+          schema = ${{ secrets.SNOW_SCHEMA }}
+          EOF
+
+      - name: Run migrations
+        run: |
+          for f in migrations/*.sql; do
+            echo "Running $f..."
+            snowsql -c dev -f $f
+          done
+
+      - name: Upload CSV files
+        run: |
+          snowsql -c dev -q "CREATE STAGE IF NOT EXISTS repo_stage FILE_FORMAT=(TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='\"');"
+          snowsql -c dev -q "REMOVE @repo_stage"
+          snowsql -c dev -q "PUT file://data/csv/* @repo_stage AUTO_COMPRESS=TRUE OVERWRITE=TRUE"
+
+      - name: Run objects (tables, constraints, views, scripts)
+        run: |
+          for dir in tables constraints data views scripts; do
+            if [ -d $dir ]; then
+              for f in $dir/*.sql; do
+                echo "Running $f..."
+                snowsql -c dev -f $f
+              done
+            fi
+          done
+
+      - name: Run tests
+        run: |
+          if [ -d tests ]; then
+            for f in tests/*.sql; do
+              echo "Running test $f..."
+              snowsql -c dev -f $f
+            done
+          fi
