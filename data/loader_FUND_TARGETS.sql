@@ -3,4 +3,4 @@ COPY INTO FUND_TARGETS (FUND_ID, ASSET_OBJECTIVE_ID, ENGAGEMENT_TYPE_ID, FREQUEN
 FROM @repo_stage/Fund_Targets.csv
 FILE_FORMAT = (TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"')
 ON_ERROR = 'ABORT_STATEMENT';
---------------------------------------------------------
+
