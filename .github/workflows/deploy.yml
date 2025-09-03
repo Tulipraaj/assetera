@@ -13,16 +13,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install SnowSQL (APT method)
+      - name: Install SnowSQL
         run: |
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https gnupg
-          curl -s https://sfc-repo.snowflakecomputing.com/GPG-KEY-snowflake > snowflake.pubkey
-          sudo apt-key add snowflake.pubkey
-          echo "deb https://sfc-repo.snowflakecomputing.com/apt/debian/ /" | sudo tee /etc/apt/sources.list.d/snowflake.list
-          sudo apt-get update
-          sudo apt-get install -y snowsql
-          echo "/usr/bin" >> $GITHUB_PATH
+          curl -O https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.29-linux_x86_64.deb
+          sudo dpkg -i snowsql-1.2.29-linux_x86_64.deb
+          snowsql -v
+
 
 
       - name: Configure SnowSQL
