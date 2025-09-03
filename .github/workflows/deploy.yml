@@ -20,9 +20,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y wget
-          wget https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.29-linux_x86_64.bash
-          bash snowsql-1.2.29-linux_x86_64.bash -b -p $HOME/.local/bin
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          wget https://sfc-repo.snowflakecomputing.com/snowsql/bootstrap/1.2/linux_x86_64/snowsql-1.2.29-linux_x86_64.deb
+          sudo dpkg -i snowsql-1.2.29-linux_x86_64.deb
           snowsql -v
 
       # 3. Upload CSV files into Snowflake stage
