@@ -17,6 +17,8 @@ cur = conn.cursor()
 # Run scripts in proper order
 folders = ["migrations", "tables", "constraints", "data", "views", "scripts"]
 for folder in folders:
+    if folder == "migrations/admin_only":
+        continue
     if os.path.isdir(folder):
         for file in sorted(os.listdir(folder)):
             if file.endswith(".sql"):
