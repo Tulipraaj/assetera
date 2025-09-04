@@ -4,28 +4,35 @@ CREATE OR REPLACE PROCEDURE insert_fund_asset (
     p_percent_of_fund FLOAT
 )
 RETURNS STRING
-LANGUAGE SQL
+LANGUAGE JAVASCRIPT
 EXECUTE AS CALLER
 AS
-'
-DECLARE
-    v_total FLOAT;
-BEGIN
-    -- Compute current allocation
-    SELECT COALESCE(SUM(percent_of_fund), 0)
-      INTO v_total
-      FROM fund_assets
-     WHERE fund_id = p_fund_id;
+$$
+    // Get current total allocation for the fund
+    var stmt1 = snowflake.createStatement({
+        sqlText: `SELECT COALESCE(SUM(percent_of_fund), 0) as total 
+                  FROM fund_assets 
+                  WHERE fund_id = ?`,
+        binds: [p_fund_id]
+    });
     
-    -- Enforce rule
-    IF (v_total + p_percent_of_fund) > 100 THEN
-        RETURN ''❌ Allocation exceeds 100% for fund '' || p_fund_id;
-    END IF;
+    var result1 = stmt1.execute();
+    result1.next();
+    var currentTotal = result1.getColumnValue(1);
     
-    -- Insert if valid
-    INSERT INTO fund_assets (fund_id, asset_class_id, percent_of_fund)
-    VALUES (p_fund_id, p_asset_class_id, p_percent_of_fund);
+    // Check if adding new allocation would exceed 100%
+    if (currentTotal + p_percent_of_fund > 100) {
+        return "❌ Allocation exceeds 100% for fund " + p_fund_id;
+    }
     
-    RETURN ''✅ Inserted successfully'';
-END;
-';
+    // Insert the new allocation
+    var stmt2 = snowflake.createStatement({
+        sqlText: `INSERT INTO fund_assets (fund_id, asset_class_id, percent_of_fund)
+                  VALUES (?, ?, ?)`,
+        binds: [p_fund_id, p_asset_class_id, p_percent_of_fund]
+    });
+    
+    stmt2.execute();
+    
+    return "✅ Inserted successfully";
+$$;
