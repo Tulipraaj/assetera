@@ -13,15 +13,28 @@ WITH customer_risk_counts AS (
 ),
 customer_stats AS (
     SELECT
-        c.Customer_ID,
-        c.Age,
-        AVG(a.Risk_Profile_ID) AS Avg_Risk_Profile,
-        MODE() WITHIN GROUP (ORDER BY a.Risk_Profile_ID) AS Mode_Risk_Profile
-    FROM customers c
-    JOIN customer_answers ca ON c.Customer_ID = ca.Customer_ID
-    JOIN answers a ON ca.Question_ID = a.Question_ID AND ca.Answer_ID = a.Answer_ID
-    WHERE c.Age IS NOT NULL AND a.Risk_Profile_ID IS NOT NULL
-    GROUP BY c.Customer_ID, c.Age
+        Customer_ID,
+        Age,
+        Avg_Risk_Profile,
+        Mode_Risk_Profile
+    FROM (
+        SELECT
+            c.Customer_ID,
+            c.Age,
+            AVG(a.Risk_Profile_ID) AS Avg_Risk_Profile,
+            a.Risk_Profile_ID,
+            COUNT(*) AS freq,
+            ROW_NUMBER() OVER (
+                PARTITION BY c.Customer_ID, c.Age
+                ORDER BY COUNT(*) DESC, a.Risk_Profile_ID
+            ) AS rn
+        FROM customers c
+        JOIN customer_answers ca ON c.Customer_ID = ca.Customer_ID
+        JOIN answers a ON ca.Question_ID = a.Question_ID AND ca.Answer_ID = a.Answer_ID
+        WHERE c.Age IS NOT NULL AND a.Risk_Profile_ID IS NOT NULL
+        GROUP BY c.Customer_ID, c.Age, a.Risk_Profile_ID
+    ) t
+    WHERE rn = 1
 ),
 customer_final AS (
     SELECT
