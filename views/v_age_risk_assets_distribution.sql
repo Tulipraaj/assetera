@@ -18,7 +18,7 @@ WITH age_groups AS (
             WHEN c.age >= 70 THEN 'Above 70'
             ELSE 'Unknown'
         END AS age_group
-    FROM customers 
+    FROM customers c
     WHERE c.age IS NOT NULL
 ),
 cleaned_assets AS (
@@ -55,4 +55,5 @@ LEFT JOIN cleaned_assets ca
     ON ag.customer_id = ca.customer_id
 GROUP BY ag.age_group, rp.final_risk_profile
 ORDER BY ag.age_group, rp.final_risk_profile;
+
 
