@@ -5,22 +5,22 @@ CREATE OR REPLACE PROCEDURE insert_fund_asset (
 )
 RETURNS STRING
 LANGUAGE SQL
+EXECUTE AS CALLER
 AS
-$$
 DECLARE
     v_total FLOAT;
-    allocation_violation EXCEPTION;
 BEGIN
     -- Check current allocation for this fund
-    SELECT COALESCE(SUM(percent_of_fund),0)
-    INTO v_total
-    FROM fund_assets
-    WHERE fund_id = p_fund_id;
+    LET v_total = COALESCE((
+        SELECT SUM(percent_of_fund)
+        FROM fund_assets
+        WHERE fund_id = p_fund_id
+    ), 0);
 
     -- If new allocation exceeds 100%, raise error
     IF v_total + p_percent_of_fund > 100 THEN
-        RAISE allocation_violation 
-          USING MESSAGE = '❌ Allocation exceeds 100% for fund ' || p_fund_id;
+        RAISE STATEMENT_ERROR 
+            USING MESSAGE = '❌ Allocation exceeds 100% for fund ' || p_fund_id;
     END IF;
 
     -- Otherwise insert
@@ -29,4 +29,3 @@ BEGIN
 
     RETURN '✅ Inserted successfully';
 END;
-$$;
