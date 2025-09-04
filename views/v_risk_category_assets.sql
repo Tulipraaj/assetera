@@ -8,13 +8,39 @@ WITH customer_answer_risks AS (
     JOIN customer_answers ca ON c.Customer_ID = ca.Customer_ID
     JOIN answers a ON ca.Question_ID = a.Question_ID AND ca.Answer_ID = a.Answer_ID
 ),
-customer_stats AS (
+customer_avg_stats AS (
     SELECT
         Customer_ID,
-        AVG(Risk_Profile_ID) AS Avg_Risk_Profile,
-        MODE() WITHIN GROUP (ORDER BY Risk_Profile_ID) AS Mode_Risk_Profile
+        AVG(Risk_Profile_ID) AS Avg_Risk_Profile
     FROM customer_answer_risks
     GROUP BY Customer_ID
+),
+customer_mode_stats AS (
+    SELECT
+        Customer_ID,
+        Risk_Profile_ID AS Mode_Risk_Profile
+    FROM (
+        SELECT
+            Customer_ID,
+            Risk_Profile_ID,
+            COUNT(*) AS freq,
+            ROW_NUMBER() OVER (
+                PARTITION BY Customer_ID
+                ORDER BY COUNT(*) DESC, Risk_Profile_ID
+            ) AS rn
+        FROM customer_answer_risks
+        GROUP BY Customer_ID, Risk_Profile_ID
+    ) t
+    WHERE rn = 1
+),
+customer_stats AS (
+    SELECT
+        avg_stats.Customer_ID,
+        avg_stats.Avg_Risk_Profile,
+        mode_stats.Mode_Risk_Profile
+    FROM customer_avg_stats avg_stats
+    JOIN customer_mode_stats mode_stats
+        ON avg_stats.Customer_ID = mode_stats.Customer_ID
 ),
 customer_final AS (
     SELECT
