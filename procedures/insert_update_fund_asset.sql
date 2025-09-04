@@ -3,7 +3,7 @@ RETURNS STRING
 LANGUAGE JAVASCRIPT
 AS
 '
-var checkStmt = snowflake.createStatement({sqlText: "SELECT COALESCE(SUM(percent_of_fund), 0) FROM fund_assets WHERE fund_id = " + p_fund_id});
+var checkStmt = snowflake.createStatement({sqlText: "SELECT COALESCE(SUM(percent_of_fund), 0) FROM fund_assets WHERE fund_id = " + p_fund_id})
 var result = checkStmt.execute();
 result.next();
 var currentTotal = result.getColumnValue(1);
