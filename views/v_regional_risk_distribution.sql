@@ -9,27 +9,60 @@ WITH customer_answer_risks AS (
     JOIN customer_answers ca ON c.Customer_ID = ca.Customer_ID
     JOIN answers a ON ca.Question_ID = a.Question_ID AND ca.Answer_ID = a.Answer_ID
 ),
-customer_mode_stats AS (
+customer_avg_stats AS (
     SELECT 
         Customer_ID,
         state,
         country,
-        AVG(Risk_Profile_ID) AS Avg_Risk_Profile,
-        MODE() WITHIN GROUP (ORDER BY Risk_Profile_ID) AS Mode_Risk_Profile
+        AVG(Risk_Profile_ID) AS Avg_Risk_Profile
     FROM customer_answer_risks
     GROUP BY Customer_ID, state, country
 ),
-customer_final AS (
+customer_mode_stats AS (
     SELECT
         Customer_ID,
         state,
         country,
+        Risk_Profile_ID AS Mode_Risk_Profile
+    FROM (
+        SELECT
+            Customer_ID,
+            state,
+            country,
+            Risk_Profile_ID,
+            freq,
+            ROW_NUMBER() OVER (
+                PARTITION BY Customer_ID, state, country
+                ORDER BY freq DESC, Risk_Profile_ID
+            ) AS rn
+        FROM (
+            SELECT
+                Customer_ID,
+                state,
+                country,
+                Risk_Profile_ID,
+                COUNT(*) AS freq
+            FROM customer_answer_risks
+            GROUP BY Customer_ID, state, country, Risk_Profile_ID
+        )
+    ) t
+    WHERE rn = 1
+),
+customer_final AS (
+    SELECT
+        a.Customer_ID,
+        a.state,
+        a.country,
         CASE
-            WHEN Mode_Risk_Profile IN (1,2) THEN FLOOR(Avg_Risk_Profile)
-            WHEN Mode_Risk_Profile IN (4,5) THEN CEIL(Avg_Risk_Profile)
-            ELSE ROUND(Avg_Risk_Profile)
+            WHEN m.Mode_Risk_Profile IN (1,2) THEN FLOOR(a.Avg_Risk_Profile)
+            WHEN m.Mode_Risk_Profile IN (4,5) THEN CEIL(a.Avg_Risk_Profile)
+            ELSE ROUND(a.Avg_Risk_Profile)
         END AS Final_Risk_Profile_ID
-    FROM customer_mode_stats
+    FROM customer_avg_stats a
+    JOIN customer_mode_stats m
+        ON a.Customer_ID = m.Customer_ID
+        AND a.state = m.state
+        AND a.country = m.country
 ),
 regional_risk_counts AS (
     SELECT
