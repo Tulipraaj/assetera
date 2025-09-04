@@ -1,3 +1,6 @@
+use database assetera;
+use schema public; 
+
 CREATE OR REPLACE VIEW v_age_risk_assets_distribution AS
 WITH age_groups AS (
     SELECT 
@@ -52,3 +55,4 @@ LEFT JOIN cleaned_assets ca
     ON ag.customer_id = ca.customer_id
 GROUP BY ag.age_group, rp.final_risk_profile
 ORDER BY ag.age_group, rp.final_risk_profile;
+
