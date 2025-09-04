@@ -7,12 +7,9 @@ RETURNS STRING
 LANGUAGE JAVASCRIPT
 EXECUTE AS CALLER
 AS
-$$
-    // Get current total allocation for the fund
+'
     var stmt1 = snowflake.createStatement({
-        sqlText: `SELECT COALESCE(SUM(percent_of_fund), 0) as total 
-                  FROM fund_assets 
-                  WHERE fund_id = ?`,
+        sqlText: "SELECT COALESCE(SUM(percent_of_fund), 0) as total FROM fund_assets WHERE fund_id = ?",
         binds: [p_fund_id]
     });
     
@@ -20,19 +17,16 @@ $$
     result1.next();
     var currentTotal = result1.getColumnValue(1);
     
-    // Check if adding new allocation would exceed 100%
     if (currentTotal + p_percent_of_fund > 100) {
-        return "❌ Allocation exceeds 100% for fund " + p_fund_id;
+        return "Allocation exceeds 100% for fund " + p_fund_id;
     }
     
-    // Insert the new allocation
     var stmt2 = snowflake.createStatement({
-        sqlText: `INSERT INTO fund_assets (fund_id, asset_class_id, percent_of_fund)
-                  VALUES (?, ?, ?)`,
+        sqlText: "INSERT INTO fund_assets (fund_id, asset_class_id, percent_of_fund) VALUES (?, ?, ?)",
         binds: [p_fund_id, p_asset_class_id, p_percent_of_fund]
     });
     
     stmt2.execute();
     
-    return "✅ Inserted successfully";
-$$;
+    return "Inserted successfully";
+';
