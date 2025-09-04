@@ -11,17 +11,26 @@ WITH customer_risk_counts AS (
     WHERE c.Age IS NOT NULL AND a.Risk_Profile_ID IS NOT NULL
     GROUP BY c.Customer_ID, c.Age, a.Risk_Profile_ID
 ),
-customer_stats AS (
+customer_avg_stats AS (
+    SELECT
+        c.Customer_ID,
+        c.Age,
+        AVG(a.Risk_Profile_ID) AS Avg_Risk_Profile
+    FROM customers c
+    JOIN customer_answers ca ON c.Customer_ID = ca.Customer_ID
+    JOIN answers a ON ca.Question_ID = a.Question_ID AND ca.Answer_ID = a.Answer_ID
+    WHERE c.Age IS NOT NULL AND a.Risk_Profile_ID IS NOT NULL
+    GROUP BY c.Customer_ID, c.Age
+),
+customer_mode_stats AS (
     SELECT
         Customer_ID,
         Age,
-        Avg_Risk_Profile,
-        Mode_Risk_Profile
+        Risk_Profile_ID AS Mode_Risk_Profile
     FROM (
         SELECT
             c.Customer_ID,
             c.Age,
-            AVG(a.Risk_Profile_ID) AS Avg_Risk_Profile,
             a.Risk_Profile_ID,
             COUNT(*) AS freq,
             ROW_NUMBER() OVER (
@@ -35,6 +44,17 @@ customer_stats AS (
         GROUP BY c.Customer_ID, c.Age, a.Risk_Profile_ID
     ) t
     WHERE rn = 1
+),
+customer_stats AS (
+    SELECT
+        avg_stats.Customer_ID,
+        avg_stats.Age,
+        avg_stats.Avg_Risk_Profile,
+        mode_stats.Mode_Risk_Profile
+    FROM customer_avg_stats avg_stats
+    JOIN customer_mode_stats mode_stats
+        ON avg_stats.Customer_ID = mode_stats.Customer_ID
+        AND avg_stats.Age = mode_stats.Age
 ),
 customer_final AS (
     SELECT
