@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE safe_insert_fund_asset(p_fund_id NUMBER, p_asset_class_id NUMBER, p_percent_of_fund NUMBER)
+CREATE OR REPLACE PROCEDURE safe_insert_fund_asset(p_fund_id FLOAT, p_asset_class_id FLOAT, p_percent_of_fund FLOAT)
 RETURNS STRING
 LANGUAGE JAVASCRIPT
 AS
@@ -16,7 +16,7 @@ return "SUCCESS: Record inserted"
 ';
 
 -- Simple JavaScript procedure for updates
-CREATE OR REPLACE PROCEDURE safe_update_fund_asset(p_fund_id NUMBER, p_asset_class_id NUMBER, p_new_percent NUMBER)
+CREATE OR REPLACE PROCEDURE safe_update_fund_asset(p_fund_id FLOAT, p_asset_class_id FLOAT, p_new_percent FLOAT)
 RETURNS STRING
 LANGUAGE JAVASCRIPT
 AS
