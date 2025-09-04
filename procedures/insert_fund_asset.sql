@@ -7,23 +7,22 @@ RETURNS STRING
 LANGUAGE SQL
 EXECUTE AS CALLER
 AS
-DECLARE
-    v_total FLOAT;
 BEGIN
-    -- Check current allocation for this fund
-    LET v_total = COALESCE((
-        SELECT SUM(percent_of_fund)
-        FROM fund_assets
-        WHERE fund_id = p_fund_id
-    ), 0);
+    DECLARE v_total FLOAT;
 
-    -- If new allocation exceeds 100%, raise error
+    -- Compute current allocation
+    SELECT COALESCE(SUM(percent_of_fund),0)
+      INTO v_total
+      FROM fund_assets
+     WHERE fund_id = p_fund_id;
+
+    -- Enforce rule
     IF v_total + p_percent_of_fund > 100 THEN
-        RAISE STATEMENT_ERROR 
-            USING MESSAGE = '❌ Allocation exceeds 100% for fund ' || p_fund_id;
+        RAISE STATEMENT_ERROR
+          USING MESSAGE = '❌ Allocation exceeds 100% for fund ' || p_fund_id;
     END IF;
 
-    -- Otherwise insert
+    -- Insert if valid
     INSERT INTO fund_assets (fund_id, asset_class_id, percent_of_fund)
     VALUES (p_fund_id, p_asset_class_id, p_percent_of_fund);
 
