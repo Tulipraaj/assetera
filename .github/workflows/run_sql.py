@@ -53,7 +53,7 @@ for row in cur.fetchall():
     print("   ", row)
 
 # 4. Run SQL scripts
-folders = ["migrations", "tables", "constraints", "data", "functions", "triggers", "views", "scripts"]
+folders = ["migrations", "tables", "constraints", "data", "types", "functions", "triggers", "views", "scripts"]
 for folder in folders:
     if os.path.isdir(folder) and not folder.endswith("admin_only"):
         for file in sorted(os.listdir(folder)):
