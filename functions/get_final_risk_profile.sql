@@ -1,10 +1,10 @@
 -- Working JavaScript function that handles NUMBER(38,0) customer_id
-CREATE OR REPLACE FUNCTION get_final_risk_profile(p_customer_id VARIANT)
+CREATE OR REPLACE FUNCTION get_final_risk_profile(P_CUSTOMER_ID VARIANT)
 RETURNS VARIANT
 LANGUAGE JAVASCRIPT
 AS
 '
-var customer_id = p_customer_id
+var customer_id = P_CUSTOMER_ID
 
 var stmt1 = snowflake.createStatement({
     sqlText: "SELECT AVG(rp.risk_profile_id::FLOAT) as avg_risk FROM customer_answers ca JOIN answers a ON ca.question_id = a.question_id AND ca.answer_id = a.answer_id JOIN risk_profile rp ON a.risk_profile_id = rp.risk_profile_id WHERE ca.customer_id = ?",
@@ -44,4 +44,3 @@ try {
     return null
 }
 ';
-
