@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW FINAL_RISK_PROFILES AS
+CREATE OR REPLACE VIEW V_FINAL_RISK_PROFILES AS
 SELECT 
     ca.customer_id,
     CASE 
@@ -18,16 +18,16 @@ FROM (
              AND ca2.answer_id = a2.answer_id
             JOIN risk_profile rp2
               ON a2.risk_profile_id = rp2.risk_profile_id
-            WHERE ca2.customer_id = ca.customer_id
+            WHERE ca2.customer_id = ca_outer.customer_id
             GROUP BY rp2.risk_profile_id
             ORDER BY COUNT(*) DESC, rp2.risk_profile_id ASC
             LIMIT 1
         ) AS mode_risk
-    FROM customer_answers ca
+    FROM customer_answers ca_outer
     JOIN answers a
-      ON ca.question_id = a.question_id
-     AND ca.answer_id = a.answer_id
+      ON ca_outer.question_id = a.question_id
+     AND ca_outer.answer_id = a.answer_id
     JOIN risk_profile rp
       ON a.risk_profile_id = rp.risk_profile_id
-    GROUP BY ca.customer_id
+    GROUP BY ca_outer.customer_id
 ) t;
