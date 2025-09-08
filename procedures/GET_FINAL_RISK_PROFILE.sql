@@ -38,8 +38,8 @@ var rs = snowflake.execute({
                     ELSE ROUND(avg_risk)
                   END AS final_risk
            FROM t`
- , binds:[P_CUSTOMER_ID]});
+ , binds:[P_CUSTOMER_ID]})
 
-rs.next();
-return rs.getColumnValue(1);
+rs.next()
+return rs.getColumnValue(1)
 $$;
