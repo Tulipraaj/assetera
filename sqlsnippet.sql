@@ -1,13 +1,11 @@
-CREATE OR REPLACE FORCE EDITIONABLE VIEW "C##T_MASK"."V_temp2" ("SEGMENT_ID", "AGE_GROUP", "GENDER", "MARITAL_STATUS", "DEPENDENTS", "REGION", "ECONOMY_CLASS", "INCOME_CLASS", "FINAL_RISK_PROFILE", "CUSTOMER_COUNT", "TOTAL_ASSETS", "AVG_ASSETS", "MIN_ASSETS", "MAX_ASSETS", "STD_DEV_ASSETS") AS
+CREATE OR REPLACE VIEW "C##T_MASK"."V_temp2" ("SEGMENT_ID", "AGE_GROUP", "GENDER", "MARITAL_STATUS", "DEPENDENTS", "REGION", "ECONOMY_CLASS", "INCOME_CLASS", "FINAL_RISK_PROFILE", "CUSTOMER_COUNT", "TOTAL_ASSETS", "AVG_ASSETS", "MIN_ASSETS", "MAX_ASSETS", "STD_DEV_ASSETS") AS
 SELECT
     ROW_NUMBER() OVER (ORDER BY age_group, gender, marital_status, dependents, region, economy_class, income_class, final_risk_profile) AS segment_id,
     final_results.*
 FROM (
-    -- Your original query starts here, acting as a subquery
     WITH customer_segment_groups AS (
         SELECT
             c.customer_id,
-            -- AGE GROUPS
             CASE
                 WHEN c.age < 30 THEN 'Under 30'
                 WHEN c.age BETWEEN 30 AND 34 THEN '30-34'
@@ -21,13 +19,11 @@ FROM (
                 WHEN c.age >= 70 THEN 'Above 70'
                 ELSE 'Unknown'
             END AS age_group,
-            -- GENDER
             CASE
                 WHEN LOWER(TRIM(c.gender)) = 'male' THEN 'Male'
                 WHEN LOWER(TRIM(c.gender)) = 'female' THEN 'Female'
                 ELSE 'Unknown'
             END AS gender,
-            -- MARITAL STATUS
             CASE
                 WHEN LOWER(TRIM(c.marital_status)) = 'married' THEN 'Married'
                 WHEN LOWER(TRIM(c.marital_status)) = 'single' THEN 'Single'
@@ -35,7 +31,6 @@ FROM (
                 ELSE 'Unknown'
             END AS marital_status,
             c.number_of_dependents AS dependents,
-            -- REGION SEGMENTATION
             CASE
                 WHEN c.state IN ('Maine','Vermont','New Hampshire','Massachusetts','Connecticut','Rhode Island','New York','New Jersey','Pennsylvania')
                     THEN 'Northeast'
@@ -47,7 +42,6 @@ FROM (
                     THEN 'West'
                 ELSE 'Unknown'
             END AS region,
-            -- ECONOMIC SEGMENTATION (no symbols)
             CASE
                 WHEN c.state IN ('California', 'Washington', 'Massachusetts', 'Colorado', 'Connecticut', 'Delaware', 'Virginia', 'Maryland')
                     THEN 'Tech Finance Research'
@@ -61,7 +55,6 @@ FROM (
                     THEN 'Diversified Balanced'
                 ELSE 'Other Unknown'
             END AS economy_class,
-            -- INCOME SEGMENTATION (joined from US_INCOME_WIDE 2023)
             CASE
                 WHEN uiw."INCOME_2023" < 60000 THEN 'Low Income'
                 WHEN uiw."INCOME_2023" BETWEEN 60000 AND 69999 THEN 'Middle Income'
@@ -118,4 +111,3 @@ FROM (
 
 
 -- select segment_id from C##T_MASK."V_temp2" order by segment_id desc fetch first 5 rows only;
-select * from C##T_MASK."V_temp2";
