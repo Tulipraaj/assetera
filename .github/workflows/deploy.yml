@@ -26,5 +26,5 @@ jobs:
           SNOW_WAREHOUSE: ${{ secrets.SNOW_WAREHOUSE }}
           SNOW_SCHEMA: ${{ secrets.SNOW_SCHEMA }}
           # 👇 Use clone DB for feature branches, prod DB for main
-          SNOW_DATABASE: ${{ github.ref_name == 'main' && secrets.SNOW_PROD_DB || secrets.SNOW_CLONE_DB }}
+          SNOW_DATABASE: ${{ github.ref_name == 'main' && secrets.SNOW_DATABASE || secrets.SNOW_DATABASE_DEV }}
         run: python .github/workflows/run_sql.py
