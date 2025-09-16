@@ -22,8 +22,10 @@ jobs:
         run: |
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
             echo "SNOW_DATABASE=${{ secrets.SNOW_DATABASE }}" >> $GITHUB_ENV
+            echo "✅ Set SNOW_DATABASE to ${{ secrets.SNOW_DATABASE }}"
           else
             echo "SNOW_DATABASE=${{ secrets.SNOW_DATABASE_DEV }}" >> $GITHUB_ENV
+            echo "✅ Set SNOW_DATABASE to ${{ secrets.SNOW_DATABASE_DEV }}"
           fi
 
       - name: Run SQL Deployment
