@@ -34,5 +34,4 @@ jobs:
           SNOW_ROLE: ${{ secrets.SNOW_ROLE }}
           SNOW_WAREHOUSE: ${{ secrets.SNOW_WAREHOUSE }}
           SNOW_SCHEMA: ${{ secrets.SNOW_SCHEMA }}
-          SNOW_DATABASE: ${{ env.SNOW_DATABASE }}   # 👈 now set dynamically above
         run: python .github/workflows/run_sql.py
