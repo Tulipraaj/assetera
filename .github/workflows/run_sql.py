@@ -14,7 +14,15 @@ conn = snowflake.connector.connect(
 )
 cur = conn.cursor()
 
+# Explicitly set DB + Schema context
+db = os.getenv("SNOW_DATABASE")
+schema = os.getenv("SNOW_SCHEMA")
+
 print("▶ Current working dir:", os.getcwd())
+print(f"▶ Using Database: {db}, Schema: {schema}")
+
+cur.execute(f"USE DATABASE {db}")
+cur.execute(f"USE SCHEMA {schema}")
 
 # 1. Ensure stage exists
 print("▶ Ensuring stage 'repo_stage' exists...")
@@ -52,8 +60,10 @@ cur.execute("LIST @repo_stage")
 for row in cur.fetchall():
     print("   ", row)
 
-# 4. Run SQL scripts
-folders = ["migrations", "tables", "constraints", "data", "types", "functions", "procedures", "views", "scripts"]
+# 4. Run SQL scripts from repo folders
+folders = ["migrations", "tables", "constraints", "data", "types",
+           "functions", "procedures", "views", "scripts"]
+
 for folder in folders:
     if os.path.isdir(folder) and not folder.endswith("admin_only"):
         for file in sorted(os.listdir(folder)):
