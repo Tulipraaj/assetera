@@ -26,7 +26,7 @@ conn = snowflake.connector.connect(
 )
 cur = conn.cursor()
 
-# Ensure the DB/Schema context is explicitly set
+# Explicitly set DB + Schema context
 cur.execute(f"USE DATABASE {DB}")
 cur.execute(f"USE SCHEMA {SCHEMA}")
 
