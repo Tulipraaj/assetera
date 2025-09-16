@@ -128,8 +128,8 @@ CREATE OR REPLACE VIEW V_AGE_GENDER_MARITAL_DEPENDENTS_REGION_ECONOMY_INCOME_RIS
      WHEN uiw."INCOME_2023" >= 90000 THEN 'Very High Income'
      ELSE 'Unknown'
  END AS income_class
-   FROM c##t_mask.customers c
-   LEFT JOIN c##t_mask.US_INCOME_WIDE uiw ON TRIM(c.state) = TRIM(uiw.STATE_CLEAN)
+   FROM customers c
+   LEFT JOIN US_INCOME_WIDE uiw ON TRIM(c.state) = TRIM(uiw.STATE_CLEAN)
    WHERE c.age IS NOT NULL ),
                                                                                                  cleaned_assets AS
   (SELECT ca.customer_id,
@@ -138,12 +138,12 @@ CREATE OR REPLACE VIEW V_AGE_GENDER_MARITAL_DEPENDENTS_REGION_ECONOMY_INCOME_RIS
                        OR TRIM(ca.total) = '' THEN 0
                   ELSE TO_NUMBER(REGEXP_REPLACE(ca.total, '[^0-9.-]', ''))
               END) AS total_assets
-   FROM c##t_mask.customer_assets ca
+   FROM customer_assets ca
    GROUP BY ca.customer_id),
                                                                                                  risk_profiles AS
   (SELECT c.customer_id,
           get_final_risk_profile(c.customer_id) AS final_risk_profile
-   FROM c##t_mask.customers c)
+   FROM customers c)
 SELECT csg.age_group,
        csg.gender,
        csg.marital_status,
