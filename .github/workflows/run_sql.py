@@ -39,12 +39,24 @@ databases = cur.fetchall()
 for db in databases:
     print(f"   - {db[1]}")
 
-# Check if our target database exists
-target_db_exists = any(db[1].upper() == DB.upper() for db in databases)
+# Check if our target database exists (with better debugging)
+available_db_names = [db[1] for db in databases]
+print(f"▶ Target database: '{DB}' (length: {len(DB)})")
+print(f"▶ Available databases with lengths:")
+for db_name in available_db_names:
+    print(f"   - '{db_name}' (length: {len(db_name)})")
+
+# Strip whitespace and compare case-insensitively
+DB_clean = DB.strip().upper()
+target_db_exists = any(db_name.strip().upper() == DB_clean for db_name in available_db_names)
+
 if not target_db_exists:
     print(f"❌ Database '{DB}' not found in available databases!")
-    print(f"Available databases: {[db[1] for db in databases]}")
+    print(f"▶ Cleaned target: '{DB_clean}'")
+    print(f"▶ Cleaned available: {[db.strip().upper() for db in available_db_names]}")
     raise Exception(f"Database '{DB}' does not exist or is not accessible")
+
+print(f"✅ Database '{DB}' found in available databases")
 
 # Now set the database and schema context
 print(f"▶ Setting context to database: {DB}")
