@@ -2,32 +2,38 @@ import os
 import glob
 import snowflake.connector
 
-# Connect using GitHub secrets
+# Fetch env variables set by GitHub Actions
+DB = os.getenv("SNOW_DATABASE")
+SCHEMA = os.getenv("SNOW_SCHEMA")
+ACCOUNT = os.getenv("SNOW_ACCOUNT")
+USER = os.getenv("SNOW_USER")
+PASSWORD = os.getenv("SNOW_PASSWORD")
+ROLE = os.getenv("SNOW_ROLE")
+WAREHOUSE = os.getenv("SNOW_WAREHOUSE")
+
+print(f"▶ Current working dir: {os.getcwd()}")
+print(f"▶ Deploying to Database: {DB}, Schema: {SCHEMA}")
+
+# Connect to Snowflake
 conn = snowflake.connector.connect(
-    account=os.getenv("SNOW_ACCOUNT"),
-    user=os.getenv("SNOW_USER"),
-    password=os.getenv("SNOW_PASSWORD"),
-    role=os.getenv("SNOW_ROLE"),
-    warehouse=os.getenv("SNOW_WAREHOUSE"),
-    database=os.getenv("SNOW_DATABASE"),
-    schema=os.getenv("SNOW_SCHEMA"),
+    account=ACCOUNT,
+    user=USER,
+    password=PASSWORD,
+    role=ROLE,
+    warehouse=WAREHOUSE,
+    database=DB,
+    schema=SCHEMA
 )
 cur = conn.cursor()
 
-# Explicitly set DB + Schema context
-db = os.getenv("SNOW_DATABASE")
-schema = os.getenv("SNOW_SCHEMA")
-
-print("▶ Current working dir:", os.getcwd())
-print(f"▶ Using Database: {db}, Schema: {schema}")
-
-cur.execute(f"USE DATABASE {db}")
-cur.execute(f"USE SCHEMA {schema}")
+# Ensure the DB/Schema context is explicitly set
+cur.execute(f"USE DATABASE {DB}")
+cur.execute(f"USE SCHEMA {SCHEMA}")
 
 # 1. Ensure stage exists
 print("▶ Ensuring stage 'repo_stage' exists...")
-cur.execute("""
-CREATE STAGE IF NOT EXISTS repo_stage
+cur.execute(f"""
+CREATE STAGE IF NOT EXISTS {DB}.{SCHEMA}.repo_stage
 FILE_FORMAT = (TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"')
 """)
 
@@ -48,7 +54,7 @@ else:
             print(f"▶ Uploading {abs_path} → {filename}.gz")
             try:
                 cur.execute(
-                    f"PUT file://{abs_path} @repo_stage AUTO_COMPRESS=TRUE OVERWRITE=TRUE"
+                    f"PUT file://{abs_path} @{DB}.{SCHEMA}.repo_stage AUTO_COMPRESS=TRUE OVERWRITE=TRUE"
                 )
             except Exception as e:
                 print(f"❌ Failed to upload {file}: {e}")
@@ -56,7 +62,7 @@ else:
 
 # 3. Verify stage contents
 print("▶ Files in repo_stage:")
-cur.execute("LIST @repo_stage")
+cur.execute(f"LIST @{DB}.{SCHEMA}.repo_stage")
 for row in cur.fetchall():
     print("   ", row)
 
