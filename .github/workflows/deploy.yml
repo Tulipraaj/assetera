@@ -2,12 +2,13 @@ name: Snowflake Deploy
 
 on:
   push:
+    branches: ["*"]   # all branches
+  pull_request:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
   deploy:
-    if: "! contains(github.event.head_commit.message, '[skip deploy]')"
     runs-on: ubuntu-latest
 
     steps:
@@ -16,13 +17,23 @@ jobs:
       - name: Install Snowflake Python Connector
         run: pip install snowflake-connector-python
 
-      - name: Run SQL + CSV Upload with Python
+      - name: Set target DB
+        id: setdb
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "SNOW_DATABASE=${{ secrets.SNOW_DATABASE }}" >> $GITHUB_ENV
+            echo "✅ Set SNOW_DATABASE to ${{ secrets.SNOW_DATABASE }}"
+          else
+            echo "SNOW_DATABASE=${{ secrets.SNOW_DATABASE_DEV }}" >> $GITHUB_ENV
+            echo "✅ Set SNOW_DATABASE to ${{ secrets.SNOW_DATABASE_DEV }}"
+          fi
+
+      - name: Run SQL Deployment
         env:
           SNOW_ACCOUNT: ${{ secrets.SNOW_ACCOUNT }}
           SNOW_USER: ${{ secrets.SNOW_USER }}
           SNOW_PASSWORD: ${{ secrets.SNOW_PASSWORD }}
           SNOW_ROLE: ${{ secrets.SNOW_ROLE }}
           SNOW_WAREHOUSE: ${{ secrets.SNOW_WAREHOUSE }}
-          SNOW_DATABASE: ${{ secrets.SNOW_DATABASE }}
           SNOW_SCHEMA: ${{ secrets.SNOW_SCHEMA }}
         run: python .github/workflows/run_sql.py
