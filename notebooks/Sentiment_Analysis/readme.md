@@ -16,7 +16,7 @@ We combine **news data** with **market OHLCV data** to predict whether stock pri
 ## Methodology
 
 ### 1. Sentiment Extraction
-- Applied **FinBERT** (finance-domain BERT) to classify news into **positive, negative, neutral** categories.  
+- Applied **FinBERT** (finance-domain BERT) to classify news into **strongly positive, moderately positive, neutral, moderately negative, strongly negative** categories.  
 - Aggregated daily ticker-wise sentiment scores with weights based on probability.
 
 ### 2. Feature Engineering
