@@ -141,5 +141,3 @@ ORDER BY
     csg.economy_class,
     csg.income_class,
     final_risk_profile;
-
--- select count(*) from v_age_gender_marital_dependents_region_economy_income_risk_assets;
