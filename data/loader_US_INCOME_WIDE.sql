@@ -1,4 +1,5 @@
 COPY INTO US_INCOME_WIDE (
+    STATE_NAME,
     STATE_CLEAN,
     INCOME_2023,
     INCOME_2022,
@@ -14,19 +15,20 @@ COPY INTO US_INCOME_WIDE (
 )
 FROM (
     SELECT 
+        t.$1 AS STATE_NAME,
         t.$2 AS STATE_CLEAN,
-        t.$3::NUMBER AS INCOME_2023,
-        t.$4::NUMBER AS INCOME_2022,
-        t.$5::NUMBER AS INCOME_2021,
-        t.$6::NUMBER AS INCOME_2019,
-        t.$7::NUMBER AS INCOME_2018,
-        t.$8::NUMBER AS INCOME_2017,
-        t.$9::NUMBER AS INCOME_2016,
-        t.$10::NUMBER AS INCOME_2015,
-        t.$11::NUMBER AS INCOME_2014,
-        t.$12::NUMBER AS INCOME_2013,
+        REPLACE(REPLACE(t.$3, '$', ''), ',', '')::NUMBER AS INCOME_2023,
+        REPLACE(REPLACE(t.$4, '$', ''), ',', '')::NUMBER AS INCOME_2022,
+        REPLACE(REPLACE(t.$5, '$', ''), ',', '')::NUMBER AS INCOME_2021,
+        REPLACE(REPLACE(t.$6, '$', ''), ',', '')::NUMBER AS INCOME_2019,
+        REPLACE(REPLACE(t.$7, '$', ''), ',', '')::NUMBER AS INCOME_2018,
+        REPLACE(REPLACE(t.$8, '$', ''), ',', '')::NUMBER AS INCOME_2017,
+        REPLACE(REPLACE(t.$9, '$', ''), ',', '')::NUMBER AS INCOME_2016,
+        REPLACE(REPLACE(t.$10, '$', ''), ',', '')::NUMBER AS INCOME_2015,
+        REPLACE(REPLACE(t.$11, '$', ''), ',', '')::NUMBER AS INCOME_2014,
+        REPLACE(REPLACE(t.$12, '$', ''), ',', '')::NUMBER AS INCOME_2013,
         REPLACE(t.$13, '%', '')::NUMBER(5,2) AS GROWTH_RATE_AAGR
-    FROM @repo_stage/US_Income_Wide.csv t
+    FROM @repo_stage/US_INCOME_WIDE.csv t
 )
 FILE_FORMAT = (TYPE=CSV SKIP_HEADER=1 FIELD_OPTIONALLY_ENCLOSED_BY='"')
 ON_ERROR = 'ABORT_STATEMENT';
