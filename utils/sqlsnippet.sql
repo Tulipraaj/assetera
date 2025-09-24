@@ -1,0 +1,1 @@
+select sum(total_assets) from v_age_gender_marital_dependents_region_economy_income_risk_assets;

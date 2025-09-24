@@ -1,9 +1,7 @@
-
-CREATE OR REPLACE FUNCTION get_final_risk_profile(p_customer_id NUMBER)
-RETURNS NUMBER
+CREATE OR REPLACE FUNCTION GET_FINAL_RISK_PROFILE("P_CUSTOMER_ID" NUMBER(38,0))
+RETURNS NUMBER(38,0)
 LANGUAGE SQL
-AS
-$$
+AS '
     SELECT CASE
                WHEN mode_risk IN (1,2) THEN FLOOR(avg_risk)
                WHEN mode_risk IN (4,5) THEN CEIL(avg_risk)
@@ -33,4 +31,4 @@ $$
           ON a.risk_profile_id = rp.risk_profile_id
         WHERE ca.customer_id = p_customer_id
     ) t
-$$;
+';
