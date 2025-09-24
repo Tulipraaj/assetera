@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}AssetEra — Fund Backtester{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+
+    <style>
+      :root {
+        --accent: #2653f0;
+        --accent-hover: #1e3ed8;
+        --bg: #f7fafc;
+        --panel: #ffffff;
+        --text: #0f172a;
+        --muted: #475569;
+        --border: #e5e7eb;
+        --shadow: 0 6px 20px rgba(17, 24, 39, 0.06);
+        --radius: 14px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-slate-900 font-sans">
+    <!-- Header -->
+    <div
+      class="ae-hero bg-white border border-gray-200 rounded-2xl p-4 mx-4 mt-4 shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <div class="font-black text-3xl text-slate-900">AssetEra</div>
+        <div class="text-slate-600 text-sm">
+          | Backtesting Workbench (Prototype)
+        </div>
+      </div>
+      <div class="text-slate-600 text-sm mt-1">
+        An AssetEra research tool under Fidelity Investment — focused on five
+        model funds. Not investment advice.
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-col lg:flex-row min-h-screen">
+      <!-- Sidebar -->
+      <div class="lg:w-80 bg-white border-r border-gray-200 p-4">
+        {% block sidebar %}{% endblock %}
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="flex-1 p-4">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/controls.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

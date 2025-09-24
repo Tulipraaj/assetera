@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block sidebar %}
+<div class="space-y-4">
+    <h2 class="text-lg font-semibold text-slate-900 mb-4">Controls</h2>
+    
+    <form id="backtestForm" class="space-y-4">
+        <!-- Fund Selection -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Fund</label>
+            <select id="fund_id" name="fund_id" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                {% for fund_id, fund_data in funds.items() %}
+                <option value="{{ fund_id }}" {% if fund_id == config.fund_id %}selected{% endif %}>
+                    {{ fund_id }} — {{ fund_data.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <!-- Date Range -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ config.start_date }}" 
+                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ config.end_date }}" 
+                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <!-- Starting Amount -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Starting Amount</label>
+            <input type="number" id="start_amount" name="start_amount" value="{{ config.start_amount }}" 
+                   min="1000" step="1000"
+                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <!-- Currency -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Currency</label>
+            <select id="currency" name="currency" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="USD" {% if config.currency == 'USD' %}selected{% endif %}>USD</option>
+                <option value="INR" {% if config.currency == 'INR' %}selected{% endif %}>INR</option>
+            </select>
+        </div>
+        
+        <!-- Rebalancing -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Rebalance</label>
+            <select id="rebalance" name="rebalance" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="Annual" {% if config.rebalance == 'Annual' %}selected{% endif %}>Annual</option>
+                <option value="None" {% if config.rebalance == 'None' %}selected{% endif %}>None</option>
+            </select>
+        </div>
+        
+        <!-- Fee Settings -->
+        <div>
+            <div class="flex items-center mb-2">
+                <input type="checkbox" id="fee_toggle" name="fee_toggle" {% if config.fee_toggle %}checked{% endif %}
+                       class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                <label for="fee_toggle" class="ml-2 text-sm font-medium text-slate-700">Apply annual fee (TER)</label>
+            </div>
+            <input type="number" id="fee_value" name="fee_value" value="0.002" 
+                   min="0" max="0.05" step="0.0005"
+                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="e.g., 0.0020 for 0.20%">
+        </div>
+        
+        <!-- Risk Free Rate -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Risk-free annual rate (Sharpe)</label>
+            <input type="number" id="rf_rate" name="rf_rate" value="{{ config.rf_rate }}" 
+                   min="0" max="0.2" step="0.0025"
+                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        
+        <!-- Benchmarks -->
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Benchmarks (max 3)</label>
+            <div class="space-y-2 max-h-32 overflow-y-auto">
+                {% for bench_id, bench_data in benchmarks.items() %}
+                <div class="flex items-center">
+                    <input type="checkbox" id="bench_{{ bench_id }}" name="benchmarks" value="{{ bench_id }}"
+                           {% if bench_id in config.benchmarks %}checked{% endif %}
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="bench_{{ bench_id }}" class="ml-2 text-xs text-slate-600">{{ bench_data.name }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="pt-4 space-y-2">
+            <button type="button" id="clearCache" 
+                    class="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors">
+                ↻ Force refresh data cache
+            </button>
+            <button type="submit" id="runBacktest"
+                    class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                ▶️ Run backtest
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="loadingIndicator" class="hidden">
+    <div class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span class="ml-3 text-lg text-slate-600">Fetching prices & computing...</span>
+    </div>
+</div>
+
+<div id="errorMessage" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+    <div class="flex">
+        <div class="text-red-600">❌</div>
+        <div class="ml-2 text-red-700" id="errorText"></div>
+    </div>
+</div>
+
+<div id="results" class="hidden space-y-6">
+    
+    <!-- KPI Cards -->
+    <div id="kpiCards" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <!-- KPI cards will be populated by JavaScript -->
+    </div>
+    
+    <!-- Main Chart -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div id="equityCurveChart" style="height: 400px;"></div>
+    </div>
+    
+    <!-- Analysis Tabs -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div class="border-b border-gray-200">
+            <nav class="flex space-x-8 px-4" aria-label="Tabs">
+                <button class="tab-button active py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600" data-tab="rolling12">
+                    Rolling 12-month return
+                </button>
+                <button class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="yearly">
+                    Yearly returns
+                </button>
+                <button class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="distribution">
+                    Distribution & tail risk
+                </button>
+                <button class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="capture">
+                    Upside/Downside capture
+                </button>
+            </nav>
+        </div>
+        
+        <div class="p-4">
+            <div id="rolling12Tab" class="tab-content">
+                <div id="rolling12Chart" style="height: 300px;"></div>
+                <p class="text-sm text-gray-600 mt-2">Each point shows the return over the previous 12 months.</p>
+            </div>
+            
+            <div id="yearlyTab" class="tab-content hidden">
+                <div id="yearlyChart" style="height: 300px;"></div>
+            </div>
+            
+            <div id="distributionTab" class="tab-content hidden">
+                <div id="distributionChart" style="height: 300px;"></div>
+                <div class="grid grid-cols-3 gap-4 mt-4">
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">VaR 95% (monthly)</div>
+                        <div class="text-lg font-semibold" id="var95">—</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">CVaR 95% (monthly)</div>
+                        <div class="text-lg font-semibold" id="cvar95">—</div>
+                    </div>
+                    <div class="text-center p-3 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Avg month</div>
+                        <div class="text-lg font-semibold" id="avgMonth">—</div>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">VaR ~ typical worst 5% month. CVaR = average of the worst 5% months.</p>
+            </div>
+            
+            <div id="captureTab" class="tab-content hidden">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600 mb-2">Upside capture vs <span id="upsideBenchmark"></span></div>
+                        <div class="text-2xl font-semibold" id="upsideCapture">—</div>
+                    </div>
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
+                        <div class="text-sm text-gray-600 mb-2">Downside capture vs <span id="downsideBenchmark"></span></div>
+                        <div class="text-2xl font-semibold" id="downsideCapture">—</div>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mt-4">Upside: fund's average up-month / benchmark's average up-month. Downside analogous.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Download Section -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <button id="downloadCsv" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            Download daily equity (CSV)
+        </button>
+    </div>
+    
+    <!-- Assumptions -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <h3 class="text-lg font-semibold text-slate-900 mb-2">Assumptions & Coverage</h3>
+        <div id="assumptionsContent">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<div id="welcomeMessage" class="text-center py-12">
+    <div class="text-slate-600 text-lg">Set your inputs in the sidebar and click <strong>Run backtest</strong>.</div>
+</div>
+{% endblock %}

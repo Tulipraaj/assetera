@@ -1,0 +1,9 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+numpy
+pandas
+plotly
+requests
+python-dateutil

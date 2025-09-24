@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}{{ fund.name }} - Preview{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <nav class="text-sm text-gray-500 mb-2">
+        <a href="{{ url_for('index') }}" class="hover:text-gray-700">Home</a>
+        <span class="mx-2">/</span>
+        <span>{{ fund_id }} Preview</span>
+    </nav>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ fund.name }}</h1>
+    <p class="text-gray-600">{{ fund.description }}</p>
+</div>
+
+<!-- Preview Notice -->
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+    <div class="flex items-start">
+        <svg class="w-6 h-6 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div>
+            <h3 class="text-lg font-semibold text-blue-900 mb-2">Preview Mode</h3>
+            <p class="text-blue-800 mb-4">
+                You're viewing a limited preview with 3-year performance data. 
+                Sign up for free to access full 10-year backtesting, all 5 funds, and personalized recommendations.
+            </p>
+            <div class="space-x-3">
+                <a href="{{ url_for('signup') }}" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-block">
+                    Sign Up Free
+                </a>
+                <a href="{{ url_for('login') }}" 
+                   class="text-blue-600 hover:text-blue-700 font-medium">
+                    Already have an account?
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<!-- KPI Cards (Simplified for Preview) -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white rounded-lg card-shadow p-6">
+        <div class="text-sm text-gray-500 mb-1">Final Value</div>
+        <div class="text-2xl font-bold text-gray-900">${{ "%.0f"|format(results.kpis.final_value) }}</div>
+    </div>
+    <div class="bg-white rounded-lg card-shadow p-6">
+        <div class="text-sm text-gray-500 mb-1">Total Return</div>
+        <div class="text-2xl font-bold text-green-600">{{ "%.1f"|format(results.kpis.abs_return * 100) }}%</div>
+    </div>
+    <div class="bg-white rounded-lg card-shadow p-6">
+        <div class="text-sm text-gray-500 mb-1">CAGR</div>
+        <div class="text-2xl font-bold text-blue-600">
+            {% if results.kpis.cagr and results.kpis.cagr == results.kpis.cagr %}
+                {{ "%.1f"|format(results.kpis.cagr * 100) }}%
+            {% else %}
+                —
+            {% endif %}
+        </div>
+    </div>
+    <div class="bg-white rounded-lg card-shadow p-6">
+        <div class="text-sm text-gray-500 mb-1">Risk Level</div>
+        <div class="text-2xl font-bold text-purple-600">{{ fund.risk_level }}</div>
+    </div>
+</div>
+
+<!-- Performance Chart -->
+<div class="bg-white rounded-xl card-shadow p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">3-Year Performance Preview</h2>
+    <div id="preview-chart" style="height: 400px;"></div>
+    <p class="text-sm text-gray-600 mt-4">
+        <strong>Limited Preview:</strong> This shows 3 years of data. 
+        Sign up to access up to 10 years of historical performance data.
+    </p>
+</div>
+
+<!-- Upgrade CTA -->
+<div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-8 text-white text-center">
+    <h2 class="text-2xl font-bold mb-4">Want to See More?</h2>
+    <p class="text-lg mb-6 opacity-90">
+        Unlock full backtesting capabilities, compare all 5 funds, and get personalized recommendations 
+        based on your risk profile.
+    </p>
+    <div class="space-x-4">
+        <a href="{{ url_for('signup') }}" 
+           class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 inline-block">
+            Get Full Access
+        </a>
+        <a href="{{ url_for('index') }}" 
+           class="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-purple-600 inline-block">
+            View Other Previews
+        </a>
+    </div>
+</div>
+
+<script>
+// Store results data for JavaScript
+const resultsData = {{ results|tojson }};
+
+// Performance Chart
+const performanceData = [{
+    x: resultsData.chart_data.dates,
+    y: resultsData.chart_data.portfolio,
+    type: 'scatter',
+    mode: 'lines',
+    name: 'Portfolio',
+    line: { color: '#2563eb', width: 3 }
+}];
+
+// Add benchmark lines
+resultsData.chart_data.benchmarks.forEach((bench, index) => {
+    const colors = ['#dc2626', '#059669'];
+    performanceData.push({
+        x: resultsData.chart_data.dates,
+        y: Object.values(bench.data),
+        type: 'scatter',
+        mode: 'lines',
+        name: bench.name,
+        line: { color: colors[index % colors.length], width: 2 }
+    });
+});
+
+Plotly.newPlot('preview-chart', performanceData, {
+    title: 'Performance vs Benchmarks (Normalized to 1.0)',
+    xaxis: { title: 'Date' },
+    yaxis: { title: 'Growth Multiple' },
+    showlegend: true,
+    responsive: true
+});
+</script>
+
+{% else %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+    <h2 class="text-lg font-semibold text-red-800 mb-2">Preview Unavailable</h2>
+    <p class="text-red-700">Unable to generate preview data at this time. Please try again later.</p>
+</div>
+{% endif %}
+{% endblock %}

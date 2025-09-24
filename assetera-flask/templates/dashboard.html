@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AssetEra{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Your Investment Dashboard</h1>
+            <p class="text-gray-600">
+                Welcome back! Based on your risk profile, we've recommended 
+                <strong>{{ funds[recommended_fund].name }}</strong> as your primary fund.
+            </p>
+        </div>
+        <div class="text-right">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="text-sm text-blue-600 font-medium">Your Risk Profile</div>
+                <div class="text-lg font-bold text-blue-900">{{ funds[recommended_fund].risk_level }}</div>
+                <div class="text-xs text-blue-600 mt-1">{{ recommended_fund }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommended Fund Highlight -->
+<div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white mb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-bold mb-2">Recommended for You</h2>
+            <h3 class="text-xl mb-2">{{ funds[recommended_fund].name }}</h3>
+            <p class="opacity-90 mb-4">{{ funds[recommended_fund].description }}</p>
+            <div class="flex items-center space-x-4 text-sm">
+                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                    Risk: {{ funds[recommended_fund].risk_level }}
+                </span>
+                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                    Fee: {{ "%.2f"|format(funds[recommended_fund].default_fee * 100) }}%
+                </span>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('fund_backtest', fund_id=recommended_fund) }}" 
+               class="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 inline-block">
+                View Performance
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- All Funds Grid -->
+<div class="mb-8">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-6">All Available Funds</h2>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for fund_id in all_funds %}
+        <div class="bg-white rounded-xl card-shadow p-6 {% if fund_id == recommended_fund %}ring-2 ring-blue-500{% endif %}">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ fund_id }}</h3>
+                    <p class="text-sm text-gray-600">{{ funds[fund_id].name }}</p>
+                </div>
+                {% if fund_id == recommended_fund %}
+                <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
+                    Recommended
+                </span>
+                {% endif %}
+            </div>
+            
+            <p class="text-gray-600 text-sm mb-4">{{ funds[fund_id].description }}</p>
+            
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-sm">
+                    <div class="text-gray-500">Risk Level</div>
+                    <div class="font-medium text-gray-900">{{ funds[fund_id].risk_level }}</div>
+                </div>
+                <div class="text-sm text-right">
+                    <div class="text-gray-500">Annual Fee</div>
+                    <div class="font-medium text-gray-900">{{ "%.2f"|format(funds[fund_id].default_fee * 100) }}%</div>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('fund_backtest', fund_id=fund_id) }}" 
+               class="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 text-center block">
+                Analyze Performance
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="bg-white rounded-xl card-shadow p-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="text-center p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+            <div class="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Compare Funds</h3>
+            <p class="text-sm text-gray-600 mb-4">Side-by-side performance comparison</p>
+            <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">Coming Soon</button>
+        </div>
+        
+        <div class="text-center p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+            <div class="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Retake Assessment</h3>
+            <p class="text-sm text-gray-600 mb-4">Update your risk profile</p>
+            <a href="{{ url_for('questionnaire') }}" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
+                Retake Quiz
+            </a>
+        </div>
+        
+        <div class="text-center p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+            <div class="bg-orange-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-2">Export Data</h3>
+            <p class="text-sm text-gray-600 mb-4">Download performance reports</p>
+            <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">Coming Soon</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

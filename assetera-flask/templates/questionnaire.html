@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Risk Assessment - AssetEra{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">Risk Assessment Questionnaire</h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            Help us understand your investment profile so we can recommend the most suitable fund for your goals and risk tolerance.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-xl card-shadow p-8">
+        <form method="POST" id="questionnaire-form">
+            <div class="space-y-8">
+                {% for question in questions %}
+                <div class="border-b border-gray-200 pb-8 last:border-b-0 last:pb-0">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                        {{ loop.index }}. {{ question.question }}
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        {% for option in question.options %}
+                        <label class="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                            <input type="radio" 
+                                   name="{{ question.id }}" 
+                                   value="{{ option.value }}" 
+                                   required
+                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300">
+                            <span class="ml-3 text-gray-700">{{ option.text }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div class="text-sm text-blue-800">
+                            <p class="font-medium mb-1">Your Privacy Matters</p>
+                            <p class="text-blue-700">
+                                Your responses are used solely to match you with appropriate investment funds. 
+                                We do not share your personal information with third parties.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center">
+                    <div class="text-sm text-gray-500">
+                        Complete all questions to get your personalized fund recommendation
+                    </div>
+                    <button type="submit" 
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        Get My Fund Recommendation
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Progress Indicator -->
+    <div class="mt-8 text-center">
+        <div class="inline-flex items-center space-x-2 text-sm text-gray-500">
+            <div class="w-2 h-2 bg-blue-600 rounded-full"></div>
+            <span>Risk Assessment</span>
+            <div class="w-8 h-px bg-gray-300"></div>
+            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <span>Fund Recommendation</span>
+            <div class="w-8 h-px bg-gray-300"></div>
+            <div class="w-2 h-2 bg-gray-300 rounded-full"></div>
+            <span>Dashboard Access</span>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add some interactivity to show progress
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('questionnaire-form');
+    const questions = document.querySelectorAll('input[type="radio"]');
+    
+    questions.forEach(question => {
+        question.addEventListener('change', function() {
+            // Add visual feedback when questions are answered
+            const questionGroup = this.closest('.border-b, .space-y-8 > div:last-child');
+            questionGroup.classList.add('bg-green-50', 'border-green-200');
+        });
+    });
+});
+</script>
+{% endblock %}

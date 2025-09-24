@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center mb-12">
+    <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        Welcome to AssetEra Fund Backtesting
+    </h1>
+    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+        Analyze the historical performance of our professionally managed investment funds. 
+        Get started with a preview of our core funds, or sign up for full access to all 5 funds and personalized recommendations.
+    </p>
+</div>
+
+<!-- Preview Section -->
+<div class="bg-white rounded-xl card-shadow p-8 mb-12">
+    <h2 class="text-2xl font-semibold text-gray-900 mb-6">Fund Preview (No Registration Required)</h2>
+    <div class="grid md:grid-cols-2 gap-6">
+        {% for fund_id in preview_funds %}
+        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ funds[fund_id].name }}</h3>
+            <p class="text-gray-600 mb-4">{{ funds[fund_id].description }}</p>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500">Risk Level: {{ funds[fund_id].risk_level }}</span>
+                <a href="{{ url_for('fund_preview', fund_id=fund_id) }}" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    View Performance
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Sign Up CTA -->
+<div class="gradient-bg rounded-xl p-8 text-white text-center">
+    <h2 class="text-3xl font-bold mb-4">Unlock Full Access</h2>
+    <p class="text-xl mb-6 opacity-90">
+        Sign up to access all 5 funds, get personalized recommendations based on your risk profile, 
+        and use advanced backtesting features.
+    </p>
+    <div class="space-x-4">
+        <a href="{{ url_for('signup') }}" 
+           class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 inline-block">
+            Get Started Free
+        </a>
+        <a href="{{ url_for('login') }}" 
+           class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 inline-block">
+            Already have an account?
+        </a>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="mt-16 grid md:grid-cols-3 gap-8">
+    <div class="text-center">
+        <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Historical Performance</h3>
+        <p class="text-gray-600">Analyze up to 10 years of backtested performance data with detailed metrics and visualizations.</p>
+    </div>
+    
+    <div class="text-center">
+        <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Risk Assessment</h3>
+        <p class="text-gray-600">Complete our questionnaire to get matched with funds that align with your risk tolerance and goals.</p>
+    </div>
+    
+    <div class="text-center">
+        <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Professional Management</h3>
+        <p class="text-gray-600">Our funds are professionally managed with diversified portfolios across different risk levels.</p>
+    </div>
+</div>
+{% endblock %}

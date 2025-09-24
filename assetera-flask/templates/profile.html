@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - AssetEra{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Your Profile</h1>
+        <p class="text-gray-600">Manage your risk profile and view your assessment history</p>
+    </div>
+
+    <!-- Current Risk Profile -->
+    <div class="bg-white rounded-xl card-shadow p-8 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Current Risk Profile</h2>
+        
+        {% if profile_details %}
+        <div class="grid md:grid-cols-2 gap-8">
+            <div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Matched Fund</label>
+                        <div class="text-lg font-semibold text-gray-900">{{ profile_details.fund_name }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Risk Level</label>
+                        <div class="text-lg font-semibold text-blue-600">{{ profile_details.risk_level }}</div>
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium text-gray-500">Description</label>
+                        <div class="text-gray-700">{{ profile_details.description }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 rounded-lg p-6">
+                <h3 class="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <a href="{{ url_for('fund_backtest', fund_id=profile_details.fund_id) }}" 
+                       class="block w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 text-center">
+                        View Fund Performance
+                    </a>
+                    <a href="{{ url_for('retake_questionnaire') }}" 
+                       class="block w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 text-center">
+                        Retake Assessment
+                    </a>
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="block w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 text-center">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Assessment History -->
+    <div class="bg-white rounded-xl card-shadow p-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Assessment History</h2>
+        
+        {% if questionnaire_history %}
+        <div class="space-y-4">
+            {% for response in questionnaire_history %}
+            <div class="border border-gray-200 rounded-lg p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <div class="text-sm text-gray-500">Assessment Date</div>
+                        <div class="font-medium text-gray-900">{{ response.created_at.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-gray-500">Risk Score</div>
+                        <div class="font-medium text-blue-600">{{ "%.1f"|format(response.risk_score * 100) }}/100</div>
+                    </div>
+                </div>
+                
+                <!-- Response Summary -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-medium text-gray-900 mb-3">Response Summary</h4>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        {% set responses_dict = response.get_responses_dict() %}
+                        {% for question in risk_profiler.get_questions() %}
+                            {% set response_key = 'q_' + question.id.split('_', 1)[1] %}
+                            {% if response_key in responses_dict %}
+                                {% set selected_value = responses_dict[response_key] %}
+                                {% for option in question.options %}
+                                    {% if option.value == selected_value %}
+                                    <div>
+                                        <div class="text-gray-600">{{ question.question }}</div>
+                                        <div class="font-medium text-gray-900">{{ option.text }}</div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <div class="text-gray-500 mb-4">No assessment history found</div>
+            <a href="{{ url_for('questionnaire') }}" 
+               class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                Take Assessment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Account Information -->
+    <div class="bg-white rounded-xl card-shadow p-8 mt-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Account Information</h2>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="space-y-4">
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Email Address</label>
+                    <div class="text-lg text-gray-900">{{ current_user.email }}</div>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Member Since</label>
+                    <div class="text-lg text-gray-900">{{ current_user.created_at.strftime('%B %d, %Y') }}</div>
+                </div>
+                {% if current_user.last_login %}
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Last Login</label>
+                    <div class="text-lg text-gray-900">{{ current_user.last_login.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 class="font-semibold text-yellow-800 mb-2">Important Notice</h3>
+                <p class="text-sm text-yellow-700">
+                    This platform is for educational and research purposes only. 
+                    The risk assessments and fund recommendations do not constitute investment advice. 
+                    Always consult with a qualified financial advisor before making investment decisions.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

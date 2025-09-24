@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - AssetEra{% endblock %}
+
+{% block content %}
+<div class="text-center py-16">
+    <div class="max-w-md mx-auto">
+        <div class="mb-8">
+            <div class="text-6xl font-bold text-red-300 mb-4">500</div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Server Error</h1>
+            <p class="text-gray-600">Something went wrong on our end. We're working to fix it.</p>
+        </div>
+        
+        <div class="space-y-4">
+            <a href="{{ url_for('index') }}" 
+               class="block w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 font-medium">
+                Go to Homepage
+            </a>
+            
+            <button onclick="window.location.reload()" 
+                    class="block w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-50 font-medium">
+                Try Again
+            </button>
+        </div>
+        
+        <div class="mt-8 text-sm text-gray-500">
+            <p>If the problem persists, please contact support.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

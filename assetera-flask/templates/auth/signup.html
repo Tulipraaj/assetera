@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - AssetEra{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-xl card-shadow p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h1>
+            <p class="text-gray-600">Join AssetEra to access all fund performance data and get personalized recommendations</p>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <input type="email" 
+                       id="email" 
+                       name="email" 
+                       required 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                       placeholder="Enter your email">
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       required 
+                       minlength="6"
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                       placeholder="Create a secure password">
+                <p class="text-sm text-gray-500 mt-1">Minimum 6 characters</p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-sm text-blue-800">
+                        <p class="font-medium mb-1">What happens next?</p>
+                        <ul class="list-disc list-inside space-y-1 text-blue-700">
+                            <li>Complete a quick risk assessment questionnaire</li>
+                            <li>Get matched to your ideal fund based on your profile</li>
+                            <li>Access detailed backtesting for all 5 funds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" 
+                    class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                Create Account
+            </button>
+        </form>
+
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">
+                Already have an account? 
+                <a href="{{ url_for('login') }}" class="text-blue-600 hover:text-blue-700 font-medium">Sign in here</a>
+            </p>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-200">
+            <p class="text-xs text-gray-500 text-center">
+                By creating an account, you agree to our Terms of Service and Privacy Policy. 
+                This platform is for educational and research purposes only and does not constitute investment advice.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

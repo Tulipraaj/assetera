@@ -1,8 +1,5 @@
-# backtester_app.py — AssetEra Fund Backtester (light theme)
-# Same functionality; refreshed light UI:
-# - Light background, dark text
-# - Accent buttons, card-like KPI tiles
-# - Plotly switched to "plotly_white"
+# backtester_app.py — AssetEra Fund Backtester (Snowflake version)
+# Modified to load data from Snowflake instead of external APIs
 
 from __future__ import annotations
 
@@ -14,16 +11,29 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-# import yfinance as yf
-import requests
-import json
-import time
-from datetime import datetime
-
+import snowflake.connector
+from snowflake.connector.pandas_tools import pd_writer
+import warnings
 
 TRADING_DAYS = 252
-import warnings
-warnings.filterwarnings('ignore', category=FutureWarning, module='yfinance')
+warnings.filterwarnings('ignore')
+
+# =========================
+# Snowflake Configuration
+# =========================
+@st.cache_resource
+def init_snowflake_connection():
+    """Initialize Snowflake connection using Streamlit secrets"""
+    return snowflake.connector.connect(
+        user=st.secrets["snowflake"]["user"],
+        password=st.secrets["snowflake"]["password"],
+        account=st.secrets["snowflake"]["account"],
+        warehouse=st.secrets["snowflake"]["warehouse"],
+        database=st.secrets["snowflake"]["database"],
+        schema=st.secrets["snowflake"]["schema"],
+        role=st.secrets["snowflake"]["role"]
+    )
+
 # =========================
 # Branding & page settings
 # =========================
@@ -33,7 +43,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Light theme CSS (subtle, professional)
+# Light theme CSS (same as before)
 st.markdown(
     """
     <style>
@@ -102,89 +112,95 @@ st.markdown(
 )
 
 # =========================
-# Fund definitions (weights)
+# Fund definitions (same as before)
 # =========================
-FUNDS: Dict[str, Dict] = {
-    "F1": {
-        "name": "Fund 1 — Core Income (low risk)",
-        "allocations": {
-            "LQD": 0.50, "IEF": 0.20, "GLD": 0.10, "VEA": 0.10,
-            "MSFT": 0.02, "APH": 0.02, "GWW": 0.02, "PH": 0.02, "BSX": 0.02,
-        },
-        "default_fee": 0.002,  # 0.20%
-        "default_rebalance": "Annual",
-    },
-    "F2": {
-        "name": "Fund 2 — Pro Core (~12% in 10y)",
-        "allocations": {
-            "LQD": 0.30, "IEF": 0.10, "GLD": 0.08, "VEA": 0.12, "SPY": 0.12,
-            "MSFT": 0.03, "APH": 0.03, "GWW": 0.03, "PH": 0.03, "BSX": 0.03, "ETN": 0.03,
-            "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
-        },
-        "default_fee": 0.002,
-        "default_rebalance": "Annual",
-    },
-    "F3": {
-        "name": "Fund 3 — Pro Growth 17 (RS≈3.10)",
-        "allocations": {
-            "LQD": 0.098, "IEF": 0.098, "SPY": 0.060, "VEA": 0.120, "GLD": 0.112,
-            "NVDA": 0.025, "AVGO": 0.025, "MSFT": 0.025, "KLAC": 0.025,
-            "CDNS": 0.025, "ETN": 0.025, "PH": 0.025, "HEI": 0.025,
-            "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
-            "IDCC": 0.0302857143, "RDNT": 0.0302857143, "DY": 0.0302857143,
-            "GPI": 0.0302857143, "ACLS": 0.0302857143, "TTMI": 0.0302857143, "AGM": 0.0302857143,
-        },
-        "default_fee": 0.002,
-        "default_rebalance": "Annual",
-    },
-    "F4": {
-        "name": "Fund 4 — Redeem Surge 31 (max RS for >30%)",
-        "allocations": {
-            "NVDA": 0.24, "AVGO": 0.12, "KLAC": 0.06, "CDNS": 0.06,
-            "IDCC": 0.0125, "RDNT": 0.0125, "ACLS": 0.0125, "GPI": 0.0125,
-            "VWO": 0.32, "GLD": 0.15,
-        },
-        "default_fee": 0.002,
-        "default_rebalance": "Annual",
-    },
-    "F5": {
-        "name": "Fund 5 — Bridge Growth 26 (between F3 & F4)",
-        "allocations": {
-            "NVDA": 0.10, "AVGO": 0.07, "KLAC": 0.06, "CDNS": 0.05, "MSFT": 0.05, "ETN": 0.05,
-            "EME": 0.04, "PWR": 0.04, "FAST": 0.025, "BWXT": 0.025,
-            "IDCC": 0.06, "RDNT": 0.06, "ACLS": 0.06, "GPI": 0.05, "AGM": 0.05, "TTMI": 0.05,
-            "VEA": 0.08, "GLD": 0.04, "VWO": 0.02, "LQD": 0.012, "IEF": 0.008,
-        },
-        "default_fee": 0.002,
-        "default_rebalance": "Annual",
-    },
-}
+@st.cache_data
+def load_funds_from_snowflake():
+    """Load fund definitions from Snowflake"""
+    try:
+        conn = init_snowflake_connection()
+        cursor = conn.cursor()
+        
+        # Get fund data
+        cursor.execute("SELECT FUND_ID, FUND_NAME, TICKER, WEIGHT FROM FUND_ALLOCATIONS ORDER BY FUND_ID, TICKER")
+        fund_data = cursor.fetchall()
+        
+        funds = {}
+        for fund_id, fund_name, ticker, weight in fund_data:
+            if fund_id not in funds:
+                funds[fund_id] = {
+                    "name": fund_name,
+                    "allocations": {},
+                    "default_fee": 0.002,
+                    "default_rebalance": "Annual"
+                }
+            funds[fund_id]["allocations"][ticker] = float(weight)
+        
+        cursor.close()
+        return funds
+        
+    except Exception as e:
+        st.error(f"Error loading funds from Snowflake: {str(e)}")
+        # Fallback to hardcoded funds
+        return {
+            "F1": {
+                "name": "Fund 1 — Core Income (low risk)",
+                "allocations": {
+                    "LQD": 0.50, "IEF": 0.20, "GLD": 0.10, "VEA": 0.10,
+                    "MSFT": 0.02, "APH": 0.02, "GWW": 0.02, "PH": 0.02, "BSX": 0.02,
+                },
+                "default_fee": 0.002,
+                "default_rebalance": "Annual",
+            }
+        }
 
-# ==============
-# Benchmarks
-# ==============
-BENCHMARKS = {
-    # Singles
-    "SPY": {"name": "S&P 500 (SPY)", "definition": {"type": "single", "ticker": "SPY"}},
-    "GLD": {"name": "Gold (GLD)", "definition": {"type": "single", "ticker": "GLD"}},
-    "VEA": {"name": "Developed ex-US (VEA)", "definition": {"type": "single", "ticker": "VEA"}},
-    "VWO": {"name": "Emerging (VWO)", "definition": {"type": "single", "ticker": "VWO"}},
-    "IEF": {"name": "UST 7–10y (IEF)", "definition": {"type": "single", "ticker": "IEF"}},
-    "LQD": {"name": "US IG Corp (LQD)", "definition": {"type": "single", "ticker": "LQD"}},
+@st.cache_data
+def load_benchmarks_from_snowflake():
+    """Load benchmark definitions from Snowflake"""
+    try:
+        conn = init_snowflake_connection()
+        cursor = conn.cursor()
+        
+        # Get benchmark data
+        cursor.execute("SELECT BENCHMARK_ID, BENCHMARK_NAME, TICKER FROM BENCHMARKS")
+        benchmark_data = cursor.fetchall()
+        
+        benchmarks = {}
+        for bench_id, bench_name, ticker in benchmark_data:
+            benchmarks[bench_id] = {
+                "name": bench_name,
+                "definition": {"type": "single", "ticker": ticker}
+            }
+        
+        # Add hardcoded mixed benchmarks
+        benchmarks.update({
+            "60/40": {"name": "60/40 (SPY/IEF)", "definition": {"type": "mix", "weights": {"SPY": 0.6, "IEF": 0.4}}},
+            "80/20": {"name": "80/20 (SPY/IEF)", "definition": {"type": "mix", "weights": {"SPY": 0.8, "IEF": 0.2}}},
+            "40/60": {"name": "40/60 (SPY/IEF)", "definition": {"type": "mix", "weights": {"SPY": 0.4, "IEF": 0.6}}},
+            "ALL_WEATHER_LITE": {
+                "name": "All-weather lite (35 SPY / 35 IEF / 30 GLD)",
+                "definition": {"type": "mix", "weights": {"SPY": 0.35, "IEF": 0.35, "GLD": 0.30}},
+            },
+            "EQ_GLD_70_30": {
+                "name": "Equity + Gold (70 SPY / 30 GLD)",
+                "definition": {"type": "mix", "weights": {"SPY": 0.70, "GLD": 0.30}},
+            },
+        })
+        
+        cursor.close()
+        return benchmarks
+        
+    except Exception as e:
+        st.error(f"Error loading benchmarks from Snowflake: {str(e)}")
+        # Fallback to minimal benchmarks
+        return {
+            "SPY": {"name": "S&P 500 (SPY)", "definition": {"type": "single", "ticker": "SPY"}},
+            "GLD": {"name": "Gold (GLD)", "definition": {"type": "single", "ticker": "GLD"}},
+        }
 
-    # Blends
-    "60/40": {"name": "60/40 (SPY/IEF)", "definition": {"type": "mix", "weights": {"SPY": 0.6, "IEF": 0.4}}},
-    "80/20": {"name": "80/20 (SPY/IEF)", "definition": {"type": "mix", "weights": {"SPY": 0.8, "IEF": 0.2}}},
-    "40/60": {"name": "40/60 (SPY/IEF)", "definition": {"type": "mix", "weights": {"SPY": 0.4, "IEF": 0.6}}},
-    "ALL_WEATHER_LITE": {
-        "name": "All-weather lite (35 SPY / 35 IEF / 30 GLD)",
-        "definition": {"type": "mix", "weights": {"SPY": 0.35, "IEF": 0.35, "GLD": 0.30}},
-    },
-    "EQ_GLD_70_30": {
-        "name": "Equity + Gold (70 SPY / 30 GLD)",
-        "definition": {"type": "mix", "weights": {"SPY": 0.70, "GLD": 0.30}},
-    },
-}
+# Load data from Snowflake
+FUNDS = load_funds_from_snowflake()
+BENCHMARKS = load_benchmarks_from_snowflake()
 
 # ==================================================
 # Utilities — fetching, returns, portfolio compounding
@@ -195,136 +211,60 @@ def clamp_end_date(d: date) -> date:
 def years_between(d0: date, d1: date) -> float:
     return max((d1 - d0).days, 0) / 365.25
 
-def _pick_price_field(df: pd.DataFrame) -> str:
-    if isinstance(df.columns, pd.MultiIndex):
-        last = set(df.columns.get_level_values(-1))
-        if "Adj Close" in last: return "Adj Close"
-        if "Close" in last: return "Close"
-    else:
-        cols = set(df.columns)
-        if "Adj Close" in cols: return "Adj Close"
-        if "Close" in cols: return "Close"
-    return "Close"
-
-@st.cache_data(show_spinner=False, ttl="12H")
-def manual_yahoo_fetch(symbol: str, start_date: date, end_date: date) -> pd.Series:
-    """Fetch data for a single symbol using Yahoo Finance API directly"""
-    
-    # Convert dates to timestamps
-    start_timestamp = int(datetime.combine(start_date, datetime.min.time()).timestamp())
-    end_timestamp = int(datetime.combine(end_date, datetime.min.time()).timestamp())
-    
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-    params = {
-        'period1': start_timestamp,
-        'period2': end_timestamp,
-        'interval': '1d',
-        'events': 'history'
-    }
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'application/json',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Connection': 'keep-alive',
-    }
+@st.cache_data(show_spinner=False, ttl="1H")
+def fetch_prices_from_snowflake(tickers: List[str], start: date, end: date) -> pd.DataFrame:
+    """
+    Fetch prices from Snowflake database
+    """
+    if not tickers:
+        return pd.DataFrame()
     
     try:
-        response = requests.get(url, params=params, headers=headers, timeout=15)
+        conn = init_snowflake_connection()
         
-        if response.status_code == 200:
-            data = response.json()
-            
-            if 'chart' in data and data['chart']['result'] and len(data['chart']['result']) > 0:
-                result = data['chart']['result'][0]
-                
-                if 'timestamp' in result and 'indicators' in result:
-                    timestamps = result['timestamp']
-                    indicators = result['indicators']
-                    
-                    if 'quote' in indicators and len(indicators['quote']) > 0:
-                        quote = indicators['quote'][0]
-                        
-                        # Get adjusted close if available, otherwise use close
-                        if 'adjclose' in indicators and len(indicators['adjclose']) > 0:
-                            prices = indicators['adjclose'][0]['adjclose']
-                        else:
-                            prices = quote.get('close', [])
-                        
-                        if timestamps and prices:
-                            # Create datetime index
-                            dates = [datetime.fromtimestamp(ts) for ts in timestamps]
-                            
-                            # Create series and clean it
-                            series = pd.Series(prices, index=pd.DatetimeIndex(dates), name=symbol)
-                            series = series.dropna()
-                            
-                            return series
+        # Create the ticker list for SQL query
+        ticker_list = "', '".join(tickers)
         
-        print(f"Failed to fetch {symbol}: Status {response.status_code}")
+        # SQL query to get price data
+        query = f"""
+        SELECT DATE, TICKER, PRICE
+        FROM DAILY_PRICES
+        WHERE TICKER IN ('{ticker_list}')
+        AND DATE >= '{start}'
+        AND DATE <= '{end}'
+        ORDER BY DATE, TICKER
+        """
+        
+        # Execute query and get results
+        cursor = conn.cursor()
+        cursor.execute(query)
+        results = cursor.fetchall()
+        
+        if not results:
+            st.error("No data found in Snowflake for the selected date range and tickers.")
+            return pd.DataFrame()
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(results, columns=['DATE', 'TICKER', 'PRICE'])
+        
+        # Pivot to get tickers as columns
+        price_df = df.pivot(index='DATE', columns='TICKER', values='PRICE')
+        
+        # Ensure DATE index is datetime
+        price_df.index = pd.to_datetime(price_df.index)
+        price_df.index.name = "Date"
+        
+        # Sort by date and forward fill missing values
+        price_df = price_df.sort_index().ffill()
+        
+        cursor.close()
+        conn.close()
+        
+        st.success(f"✅ Successfully loaded data for {len(price_df.columns)} tickers ({len(price_df)} rows)")
+        return price_df
         
     except Exception as e:
-        print(f"Error fetching {symbol}: {str(e)}")
-    
-    return pd.Series(dtype=float, name=symbol)
-
-
-@st.cache_data(show_spinner=False, ttl="2H")
-def fetch_prices(tickers: List[str], start: date, end: date) -> pd.DataFrame:
-    """
-    Fetch prices using manual Yahoo Finance API calls
-    This bypasses the yfinance library issues
-    """
-    
-    tickers = list(tickers)
-    all_data = {}
-    failed_tickers = []
-    
-    # Show progress
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    
-    for i, ticker in enumerate(tickers):
-        status_text.text(f"Fetching {ticker} ({i+1}/{len(tickers)})...")
-        progress_bar.progress((i + 1) / len(tickers))
-        
-        try:
-            series = manual_yahoo_fetch(ticker, start, end)
-            
-            if not series.empty:
-                all_data[ticker] = series
-                print(f"✓ {ticker}: {len(series)} data points")
-            else:
-                failed_tickers.append(ticker)
-                print(f"✗ {ticker}: No data returned")
-            
-            # Rate limiting - be nice to Yahoo Finance
-            time.sleep(0.1)
-            
-        except Exception as e:
-            failed_tickers.append(ticker)
-            print(f"✗ {ticker}: Error - {str(e)}")
-    
-    # Clear progress indicators
-    progress_bar.empty()
-    status_text.empty()
-    
-    # Show results
-    if failed_tickers:
-        st.warning(f"Failed to fetch data for: {', '.join(failed_tickers)}")
-    
-    if all_data:
-        df = pd.DataFrame(all_data)
-        df.index.name = "Date"
-        df = df.sort_index()
-        
-        # Forward fill missing values
-        df = df.ffill()
-        
-        st.success(f"✅ Successfully fetched data for {len(df.columns)} tickers ({len(df)} rows)")
-        return df
-    else:
-        st.error("❌ No data was successfully fetched for any ticker")
+        st.error(f"Error fetching data from Snowflake: {str(e)}")
         return pd.DataFrame()
 
 def compute_daily_returns(prices: pd.DataFrame) -> pd.DataFrame:
@@ -420,7 +360,7 @@ def perc(x):
     except Exception: return "—"
 
 # =========================
-# Header / Branding
+# Header / Branding (same as before)
 # =========================
 st.markdown(
     """
@@ -430,7 +370,7 @@ st.markdown(
         <div class="ae-muted">| Backtesting Workbench (Prototype)</div>
       </div>
       <div class="ae-muted" style="margin-top:4px;">
-        An AssetEra research tool under Fidelity Investment — focused on five model funds. Not investment advice.
+        An AssetEra research tool under Fidelity Investment — focused on five model funds. Data from Snowflake.
       </div>
     </div>
     """,
@@ -438,7 +378,7 @@ st.markdown(
 )
 
 # =========================
-# SIDEBAR — Controls
+# SIDEBAR — Controls (same as before)
 # =========================
 st.sidebar.header("Controls")
 
@@ -490,11 +430,12 @@ if st.sidebar.button("↻ Force refresh data cache"):
     st.sidebar.success("Cache cleared. Rerun the backtest.")
 
 run = st.sidebar.button("▶️ Run backtest", type="primary")
+
 # =========================
-# MAIN — Compute & Render
+# MAIN — Compute & Render (modified to use Snowflake)
 # =========================
 if run:
-    with st.spinner("Fetching prices & computing…"):
+    with st.spinner("Loading data from Snowflake & computing…"):
         target_weights = FUNDS[fund_id]["allocations"].copy()
         fund_tickers = set(target_weights.keys())
 
@@ -505,16 +446,16 @@ if run:
             else: bench_tickers.update(d["weights"].keys())
 
         needed = sorted(fund_tickers | bench_tickers)
-        prices = fetch_prices(needed, start_date, end_date)
+        prices = fetch_prices_from_snowflake(needed, start_date, end_date)
 
         if prices.empty:
-            st.error("No price data returned. Try a later start date or check your network.")
+            st.error("No price data returned from Snowflake. Check your date range and ensure data is loaded.")
             st.stop()
 
         present = [t for t in fund_tickers if t in prices.columns]
         missing = sorted(list(fund_tickers - set(present)))
         if missing:
-            st.warning(f"These tickers had no data in the window and were dropped (weights renormalized): {missing}")
+            st.warning(f"These tickers had no data in Snowflake for the date range and were dropped (weights renormalized): {missing}")
 
         weights = _renormalize(target_weights, present)
         if not weights:
@@ -552,7 +493,7 @@ if run:
             else:
                 st.warning(f"No overlapping data for benchmark: {BENCHMARKS[b]['name']} — skipped.")
 
-        # KPI strip
+        # KPI strip (same as before)
         c1, c2, c3, c4, c5 = st.columns(5)
         c1.metric("Final Value", money(kpi["final_value"], currency))
         c2.metric("Absolute Return", perc(kpi["abs_return"]))
@@ -560,6 +501,7 @@ if run:
         c4.metric("Volatility (ann.)", perc(kpi["vol"]) if np.isfinite(kpi["vol"]) else "—")
         c5.metric("% Positive Months", perc(pct_pos_months) if np.isfinite(pct_pos_months) else "—")
 
+        # Rest of the visualization code remains the same...
         # Equity curve (light template)
         df_plot = pd.DataFrame({"Portfolio": eq})
         for s in bench_series:
@@ -572,7 +514,7 @@ if run:
         )
         st.plotly_chart(fig_eq, use_container_width=True)
 
-        # Analytics tabs
+        # Analytics tabs (same as before)
         tab1, tab2, tab3, tab4 = st.tabs(
             ["Rolling 12-month return", "Yearly returns", "Distribution & tail risk", "Upside/Downside capture"]
         )
@@ -640,13 +582,13 @@ if run:
                               perc(up_cap) if np.isfinite(up_cap) else "—")
                     c2.metric(f"Downside capture vs {BENCHMARKS[primary_key]['name']}",
                               perc(dn_cap) if np.isfinite(dn_cap) else "—")
-                    st.caption("Upside: fund’s average up-month / benchmark’s average up-month. Downside analogous.")
+                    st.caption("Upside: fund's average up-month / benchmark's average up-month. Downside analogous.")
                 else:
                     st.info("Benchmark series empty after alignment.")
             else:
                 st.info("Benchmark data not available for capture analysis.")
 
-        # Download
+        # Download (same as before)
         out = pd.DataFrame({"equity": eq})
         out.index.name = "date"
         st.download_button(
@@ -661,7 +603,7 @@ if run:
         st.write(f"- Fund: **{FUNDS[fund_id]['name']}**")
         st.write(f"- Effective window: **{effective_start} → {effective_end}** (aligned across tickers)")
         st.write(f"- Rebalance: **{rebalance}**, Annual fee: **{fee:.2%}**")
-        st.write("- Prices via yfinance (auto-adjusted ‘Close’). Prototype — not investment advice.")
+        st.write("- Prices from Snowflake database. Prototype — not investment advice.")
 
 else:
     st.info("Set your inputs in the sidebar and click **Run backtest**.")
