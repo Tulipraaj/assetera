@@ -173,6 +173,7 @@ def questionnaire():
                 responses[key] = request.form[key]
         
         # Calculate risk profile
+        logging.error(f"Responses: {responses}")
         risk_score, risk_profile = risk_profiler.calculate_risk_profile(responses)
         
         # Save responses
