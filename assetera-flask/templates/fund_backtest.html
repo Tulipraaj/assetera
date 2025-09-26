@@ -54,6 +54,43 @@ Analysis{% endblock %} {% block content %}
             class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
           />
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Benchmarks</label
+          >
+          <!-- Replaced dropdown with chip-based selection -->
+          <div class="space-y-2">
+            <div id="benchmark-chips" class="flex flex-wrap gap-2">
+              {% for benchmark_id, benchmark_info in
+              available_benchmarks.items() %}
+              <button
+                type="button"
+                class="benchmark-chip px-3 py-1 rounded-full text-sm font-medium border-2 transition-colors {% if benchmark_id in selected_benchmarks %} bg-blue-100 border-blue-500 text-blue-700 {% else %} bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200 {% endif %}"
+                data-benchmark="{{ benchmark_id }}"
+                data-selected="{% if benchmark_id in selected_benchmarks %}true{% else %}false{% endif %}"
+              >
+                {{ benchmark_info.name }} {% if benchmark_id in
+                selected_benchmarks %}
+                <span class="ml-1 text-blue-500">✓</span>
+                {% endif %}
+              </button>
+              {% endfor %}
+            </div>
+            <p class="text-xs text-gray-500">
+              Click to select/deselect benchmarks for comparison
+            </p>
+            <!-- Hidden inputs to store selected benchmarks -->
+            <div id="benchmark-inputs">
+              {% for benchmark_id in selected_benchmarks %}
+              <input
+                type="hidden"
+                name="benchmarks"
+                value="{{ benchmark_id }}"
+              />
+              {% endfor %}
+            </div>
+          </div>
+        </div>
         <button
           type="submit"
           class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm font-medium"
@@ -261,127 +298,166 @@ Analysis{% endblock %} {% block content %}
 </div>
 
 <script>
-  // Store results data for JavaScript
-  const resultsData = {{ results|tojson }};
+    // Store results data for JavaScript
+    const resultsData = {{ results|tojson }};
+    document.querySelectorAll('.benchmark-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+          const benchmarkId = this.dataset.benchmark;
+          const isSelected = this.dataset.selected === 'true';
 
-  // Performance Chart
-  const performanceData = [{
-      x: resultsData.chart_data.dates,
-      y: resultsData.chart_data.portfolio,
-      type: 'scatter',
-      mode: 'lines',
-      name: 'Portfolio',
-      line: { color: '#2563eb', width: 3 }
-  }];
+          if (isSelected) {
+              // Deselect
+              this.dataset.selected = 'false';
+              this.classList.remove('bg-blue-100', 'border-blue-500', 'text-blue-700');
+              this.classList.add('bg-gray-100', 'border-gray-300', 'text-gray-700', 'hover:bg-gray-200');
 
-  // Add benchmark lines
-  resultsData.chart_data.benchmarks.forEach((bench, index) => {
-      const colors = ['#dc2626', '#059669', '#d97706'];
-      performanceData.push({
-          x: resultsData.chart_data.dates,
-          y: Object.values(bench.data),
-          type: 'scatter',
-          mode: 'lines',
-          name: bench.name,
-          line: { color: colors[index % colors.length], width: 2 }
+              // Remove checkmark
+              const checkmark = this.querySelector('span');
+              if (checkmark) checkmark.remove();
+
+              // Remove hidden input
+              const hiddenInput = document.querySelector(`input[name="benchmarks"][value="${benchmarkId}"]`);
+              if (hiddenInput) hiddenInput.remove();
+          } else {
+              // Select
+              this.dataset.selected = 'true';
+              this.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-700', 'hover:bg-gray-200');
+              this.classList.add('bg-blue-100', 'border-blue-500', 'text-blue-700');
+
+              // Add checkmark
+              const checkmark = document.createElement('span');
+              checkmark.className = 'ml-1 text-blue-500';
+              checkmark.textContent = '✓';
+              this.appendChild(checkmark);
+
+              // Add hidden input
+              const hiddenInput = document.createElement('input');
+              hiddenInput.type = 'hidden';
+              hiddenInput.name = 'benchmarks';
+              hiddenInput.value = benchmarkId;
+              document.getElementById('benchmark-inputs').appendChild(hiddenInput);
+          }
       });
   });
 
-  Plotly.newPlot('performance-chart', performanceData, {
-      title: 'Normalized Performance (Starting Value = 1.0)',
-      xaxis: { title: 'Date' },
-      yaxis: { title: 'Growth Multiple' },
-      showlegend: true,
-      responsive: true
-  });
+    // Performance Chart
+    const performanceData = [{
+        x: resultsData.chart_data.dates,
+        y: resultsData.chart_data.portfolio,
+        type: 'scatter',
+        mode: 'lines',
+        name: 'Portfolio',
+        line: { color: '#2563eb', width: 3 }
+    }];
 
-  // Rolling Returns Chart
-  if (resultsData.rolling_data.dates.length > 0) {
-      const rollingData = [{
-          x: resultsData.rolling_data.dates,
-          y: resultsData.rolling_data.returns.map(r => r * 100),
-          type: 'scatter',
-          mode: 'lines',
-          name: 'Rolling 12M Return',
-          line: { color: '#7c3aed' }
-      }];
+    // Add benchmark lines
+    resultsData.chart_data.benchmarks.forEach((bench, index) => {
+        const colors = ['#dc2626', '#059669', '#d97706'];
+        performanceData.push({
+            x: resultsData.chart_data.dates,
+            y: Object.values(bench.data),
+            type: 'scatter',
+            mode: 'lines',
+            name: bench.name,
+            line: { color: colors[index % colors.length], width: 2 }
+        });
+    });
 
-      Plotly.newPlot('rolling-chart', rollingData, {
-          xaxis: { title: 'Date' },
-          yaxis: { title: 'Return (%)' },
-          showlegend: false,
-          responsive: true
-      });
-  }
+    Plotly.newPlot('performance-chart', performanceData, {
+        title: 'Normalized Performance (Starting Value = 1.0)',
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Growth Multiple' },
+        showlegend: true,
+        responsive: true
+    });
 
-  // Yearly Returns Chart
-  if (resultsData.yearly_data.years.length > 0) {
-      const yearlyData = [{
-          x: resultsData.yearly_data.years,
-          y: resultsData.yearly_data.returns.map(r => r * 100),
-          type: 'bar',
-          name: 'Annual Return',
-          marker: { color: '#059669' }
-      }];
+    // Rolling Returns Chart
+    if (resultsData.rolling_data.dates.length > 0) {
+        const rollingData = [{
+            x: resultsData.rolling_data.dates,
+            y: resultsData.rolling_data.returns.map(r => r * 100),
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Rolling 12M Return',
+            line: { color: '#7c3aed' }
+        }];
 
-      Plotly.newPlot('yearly-chart', yearlyData, {
-          xaxis: { title: 'Year' },
-          yaxis: { title: 'Return (%)' },
-          showlegend: false,
-          responsive: true
-      });
-  }
+        Plotly.newPlot('rolling-chart', rollingData, {
+            xaxis: { title: 'Date' },
+            yaxis: { title: 'Return (%)' },
+            showlegend: false,
+            responsive: true
+        });
+    }
 
-  // Distribution Chart
-  if (resultsData.distribution.monthly_returns.length > 0) {
-      const distributionData = [{
-          x: resultsData.distribution.monthly_returns.map(r => r * 100),
-          type: 'histogram',
-          nbinsx: 30,
-          name: 'Monthly Returns',
-          marker: { color: '#3b82f6' }
-      }];
+    // Yearly Returns Chart
+    if (resultsData.yearly_data.years.length > 0) {
+        const yearlyData = [{
+            x: resultsData.yearly_data.years,
+            y: resultsData.yearly_data.returns.map(r => r * 100),
+            type: 'bar',
+            name: 'Annual Return',
+            marker: { color: '#059669' }
+        }];
 
-      Plotly.newPlot('distribution-chart', distributionData, {
-          title: 'Distribution of Monthly Returns',
-          xaxis: { title: 'Monthly Return (%)' },
-          yaxis: { title: 'Frequency' },
-          showlegend: false,
-          responsive: true
-      });
-  }
+        Plotly.newPlot('yearly-chart', yearlyData, {
+            xaxis: { title: 'Year' },
+            yaxis: { title: 'Return (%)' },
+            showlegend: false,
+            responsive: true
+        });
+    }
 
-  // Tab functionality
-  document.querySelectorAll('.tab-button').forEach(button => {
-      button.addEventListener('click', function() {
-          const tabId = this.dataset.tab;
+    // Distribution Chart
+    if (resultsData.distribution.monthly_returns.length > 0) {
+        const distributionData = [{
+            x: resultsData.distribution.monthly_returns.map(r => r * 100),
+            type: 'histogram',
+            nbinsx: 30,
+            name: 'Monthly Returns',
+            marker: { color: '#3b82f6' }
+        }];
 
-          // Update button states
-          document.querySelectorAll('.tab-button').forEach(btn => {
-              btn.classList.remove('border-blue-500', 'text-blue-600');
-              btn.classList.add('border-transparent', 'text-gray-500');
-          });
-          this.classList.add('border-blue-500', 'text-blue-600');
-          this.classList.remove('border-transparent', 'text-gray-500');
+        Plotly.newPlot('distribution-chart', distributionData, {
+            title: 'Distribution of Monthly Returns',
+            xaxis: { title: 'Monthly Return (%)' },
+            yaxis: { title: 'Frequency' },
+            showlegend: false,
+            responsive: true
+        });
+    }
 
-          // Update content
-          document.querySelectorAll('.tab-content').forEach(content => {
-              content.classList.add('hidden');
-          });
-          document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-      });
-  });
+    // Tab functionality
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const tabId = this.dataset.tab;
 
-  // Form submission
-  document.getElementById('backtest-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const params = new URLSearchParams();
-      for (let [key, value] of formData.entries()) {
-          params.append(key, value);
-      }
-      window.location.href = `{{ url_for('fund_backtest', fund_id=fund_id) }}?${params.toString()}`;
-  });
+            // Update button states
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            this.classList.add('border-blue-500', 'text-blue-600');
+            this.classList.remove('border-transparent', 'text-gray-500');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        });
+    });
+
+    // Form submission
+    document.getElementById('backtest-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const params = new URLSearchParams();
+        for (let [key, value] of formData.entries()) {
+            params.append(key, value);
+        }
+        window.location.href = `{{ url_for('fund_backtest', fund_id=fund_id) }}?${params.toString()}`;
+    });
 </script>
 
 {% else %}
