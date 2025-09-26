@@ -21,7 +21,7 @@ config = Config()
 print(f"This is a config message : {config.SNOWFLAKE_USER}")
 
 app.config.from_object(Config)
-print(f"Im thop {app.config}")
+# print(f"Im thop {app.config}")
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
