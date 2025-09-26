@@ -167,7 +167,8 @@ def logout():
 def questionnaire():
     if request.method == 'POST':
         responses = {k: v for k, v in request.form.items() if k.startswith('q_')}
-
+        print(responses,"hello these are responses")
+        print(f"this is datatype {type(responses)} and this is keys {responses.keys()}")
         risk_score, risk_profile = risk_profiler.calculate_risk_profile(responses)
 
         # Save responses in JSONB
@@ -255,6 +256,8 @@ def fund_backtest(fund_id):
                              fund_id=fund_id, 
                              fund=FUNDS[fund_id],
                              results=results,
+                             available_benchmarks=BENCHMARKS,
+                             selected_benchmarks=benchmarks,
                              is_preview=False)
     except Exception as e:
         flash(f'Error running backtest123: {str(e)}', 'error')
