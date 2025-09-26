@@ -11,3 +11,4 @@ gunicorn
 psycopg2-binary
 requests
 snowflake-connector-python
+python-dotenv
