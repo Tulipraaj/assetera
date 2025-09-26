@@ -1,6 +1,8 @@
 """
 Risk profiling questionnaire and mapping to funds
 """
+import math
+from collections import Counter
 
 class RiskProfiler:
     def __init__(self):
@@ -104,30 +106,51 @@ class RiskProfiler:
     def calculate_risk_profile(self, responses):
         """Calculate risk score and map to fund"""
         total_score = 0
-        max_possible_score = len(self.questions) * 5
-        
+        # max_possible_score = len(self.questions) * 5
+        risk_profiles = []
         for question in self.questions:
             response_key = f"q_{question['id'].split('_', 1)[1]}"
             if response_key in responses:
                 # Find the score for this response
                 for option in question['options']:
                     if option['value'] == responses[response_key]:
-                        total_score += option['score']
+                        # total_score += option['score']
+                        risk_profiles.append(option['score'])
                         break
         
-        # Normalize to 0-1 scale
-        risk_score = total_score / max_possible_score
+        risk_score = 0
         
-        # Map to funds based on risk score
-        if risk_score <= 0.2:
-            fund = "F1"  # Very conservative
-        elif risk_score <= 0.4:
-            fund = "F2"  # Conservative to moderate
-        elif risk_score <= 0.6:
-            fund = "F3"  # Moderate
-        elif risk_score <= 0.8:
-            fund = "F5"  # Moderate to aggressive
+        risk_counts = Counter(risk_profiles)
+        max_count = max(risk_counts.values())
+        most_common_profiles = [profile for profile,count in risk_counts.items() if count==max_count]
+        
+        most_common_profile_risk = min(most_common_profiles)
+        avg_risk = sum(risk_profiles)/len(risk_profiles)
+
+        if most_common_profile_risk in [1,2]:
+            risk_score = math.floor(avg_risk)
+        elif most_common_profile_risk in [4,5]:
+            risk_score = math.ceil(avg_risk)
+        
         else:
-            fund = "F4"  # Aggressive
+            risk_score = round(avg_risk)
         
+
+                # Map to funds based on risk score
+        if risk_score == 1:
+            fund = "F1"  # Very conservative
+        elif risk_score == 2:
+            fund = "F2"  # Conservative to moderate
+        elif risk_score == 3:
+            fund = "F3"  # Moderate
+        elif risk_score == 4:
+            fund = "F4"  # Moderate to aggressive
+        else:
+            fund = "F5"  # Aggressive
+
         return risk_score, fund
+    
+
+    # def calculate_risk_profile2(self,responses):
+
+        
