@@ -1,366 +1,402 @@
-{% extends "base.html" %}
-
-{% block title %}{{ fund.name }} - Performance Analysis{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}{{ fund.name }} - Performance
+Analysis{% endblock %} {% block content %}
 <div class="mb-8">
-    <div class="flex items-center justify-between">
-        <div>
-            <nav class="text-sm text-gray-500 mb-2">
-                <a href="{{ url_for('dashboard') }}" class="hover:text-gray-700">Dashboard</a>
-                <span class="mx-2">/</span>
-                <span>{{ fund_id }} Performance</span>
-            </nav>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ fund.name }}</h1>
-            <p class="text-gray-600">{{ fund.description }}</p>
-        </div>
-        
-        <!-- Controls Panel -->
-        <div class="bg-white rounded-lg border border-gray-200 p-4">
-            <form id="backtest-form" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                        <input type="date" 
-                               name="start_date" 
-                               value="{{ (results.effective_start if results else '2014-01-01') }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                        <input type="date" 
-                               name="end_date" 
-                               value="{{ (results.effective_end if results else '2024-12-31') }}"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Starting Amount ($)</label>
-                    <input type="number" 
-                           name="start_amount" 
-                           value="{{ (results.settings.start_amount if results else 100000) }}"
-                           min="1000" 
-                           step="1000"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
-                </div>
-                <button type="submit" 
-                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm font-medium">
-                    Update Analysis
-                </button>
-            </form>
-        </div>
+  <div class="flex items-center justify-between">
+    <div>
+      <nav class="text-sm text-gray-500 mb-2">
+        <a href="{{ url_for('dashboard') }}" class="hover:text-gray-700"
+          >Dashboard</a
+        >
+        <span class="mx-2">/</span>
+        <span>{{ fund_id }} Performance</span>
+      </nav>
+      <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ fund.name }}</h1>
+      <p class="text-gray-600">{{ fund.description }}</p>
     </div>
+
+    <!-- Controls Panel -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <form id="backtest-form" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Start Date</label
+            >
+            <input
+              type="date"
+              name="start_date"
+              value="{{ (results.effective_start if results else '2014-01-01') }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >End Date</label
+            >
+            <input
+              type="date"
+              name="end_date"
+              value="{{ (results.effective_end if results else '2024-12-31') }}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Starting Amount ($)</label
+          >
+          <input
+            type="number"
+            name="start_amount"
+            value="{{ (results.settings.start_amount if results else 100000) }}"
+            min="1000"
+            step="1000"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 text-sm font-medium"
+        >
+          Update Analysis
+        </button>
+      </form>
+    </div>
+  </div>
 </div>
 
 {% if results %}
 <!-- KPI Cards -->
 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-    <div class="bg-white rounded-lg card-shadow p-6">
-        <div class="text-sm text-gray-500 mb-1">Final Value</div>
-        <div class="text-2xl font-bold text-gray-900">${{ "%.0f"|format(results.kpis.final_value) }}</div>
+  <div class="bg-white rounded-lg card-shadow p-6">
+    <div class="text-sm text-gray-500 mb-1">Final Value</div>
+    <div class="text-2xl font-bold text-gray-900">
+      ${{ "%.0f"|format(results.kpis.final_value) }}
     </div>
-    <div class="bg-white rounded-lg card-shadow p-6">
-        <div class="text-sm text-gray-500 mb-1">Total Return</div>
-        <div class="text-2xl font-bold text-green-600">{{ "%.1f"|format(results.kpis.abs_return * 100) }}%</div>
+  </div>
+  <div class="bg-white rounded-lg card-shadow p-6">
+    <div class="text-sm text-gray-500 mb-1">Total Return</div>
+    <div class="text-2xl font-bold text-green-600">
+      {{ "%.1f"|format(results.kpis.abs_return * 100) }}%
     </div>
-    <div class="bg-white rounded-lg card-shadow p-6">
-        <div class="text-sm text-gray-500 mb-1">CAGR</div>
-        <div class="text-2xl font-bold text-blue-600">
-            {% if results.kpis.cagr and results.kpis.cagr == results.kpis.cagr %}
-                {{ "%.1f"|format(results.kpis.cagr * 100) }}%
-            {% else %}
-                —
-            {% endif %}
-        </div>
+  </div>
+  <div class="bg-white rounded-lg card-shadow p-6">
+    <div class="text-sm text-gray-500 mb-1">CAGR</div>
+    <div class="text-2xl font-bold text-blue-600">
+      {% if results.kpis.cagr and results.kpis.cagr == results.kpis.cagr %} {{
+      "%.1f"|format(results.kpis.cagr * 100) }}% {% else %} — {% endif %}
     </div>
-    <div class="bg-white rounded-lg card-shadow p-6">
-        <div class="text-sm text-gray-500 mb-1">Volatility</div>
-        <div class="text-2xl font-bold text-orange-600">
-            {% if results.kpis.vol and results.kpis.vol == results.kpis.vol %}
-                {{ "%.1f"|format(results.kpis.vol * 100) }}%
-            {% else %}
-                —
-            {% endif %}
-        </div>
+  </div>
+  <div class="bg-white rounded-lg card-shadow p-6">
+    <div class="text-sm text-gray-500 mb-1">Volatility</div>
+    <div class="text-2xl font-bold text-orange-600">
+      {% if results.kpis.vol and results.kpis.vol == results.kpis.vol %} {{
+      "%.1f"|format(results.kpis.vol * 100) }}% {% else %} — {% endif %}
     </div>
-    <div class="bg-white rounded-lg card-shadow p-6">
-        <div class="text-sm text-gray-500 mb-1">Sharpe Ratio</div>
-        <div class="text-2xl font-bold text-purple-600">
-            {% if results.kpis.sharpe and results.kpis.sharpe == results.kpis.sharpe %}
-                {{ "%.2f"|format(results.kpis.sharpe) }}
-            {% else %}
-                —
-            {% endif %}
-        </div>
+  </div>
+  <div class="bg-white rounded-lg card-shadow p-6">
+    <div class="text-sm text-gray-500 mb-1">% Positive Months</div>
+    <div class="text-2xl font-bold text-purple-600">
+      {% if results.pct_pos_months and results.pct_pos_months ==
+      results.pct_pos_months %} {{ "%.2f"|format(results.pct_pos_months *100) }}
+      {% else %} — {% endif %}
     </div>
+  </div>
 </div>
 
 <!-- Main Chart -->
 <div class="bg-white rounded-xl card-shadow p-6 mb-8">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Performance Chart</h2>
-    <div id="performance-chart" style="height: 400px;"></div>
+  <h2 class="text-xl font-semibold text-gray-900 mb-4">Performance Chart</h2>
+  <div id="performance-chart" style="height: 400px;"></div>
 </div>
 
 <!-- Analysis Tabs -->
 <div class="bg-white rounded-xl card-shadow">
-    <div class="border-b border-gray-200">
-        <nav class="flex space-x-8 px-6">
-            <button class="tab-button py-4 px-1 border-b-2 border-blue-500 text-blue-600 font-medium text-sm" 
-                    data-tab="rolling">
-                Rolling Returns
-            </button>
-            <button class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm" 
-                    data-tab="yearly">
-                Yearly Returns
-            </button>
-            <button class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm" 
-                    data-tab="distribution">
-                Distribution
-            </button>
-            <button class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm" 
-                    data-tab="details">
-                Details
-            </button>
-        </nav>
+  <div class="border-b border-gray-200">
+    <nav class="flex space-x-8 px-6">
+      <button
+        class="tab-button py-4 px-1 border-b-2 border-blue-500 text-blue-600 font-medium text-sm"
+        data-tab="rolling"
+      >
+        Rolling Returns
+      </button>
+      <button
+        class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm"
+        data-tab="yearly"
+      >
+        Yearly Returns
+      </button>
+      <button
+        class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm"
+        data-tab="distribution"
+      >
+        Distribution
+      </button>
+      <button
+        class="tab-button py-4 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium text-sm"
+        data-tab="details"
+      >
+        Details
+      </button>
+    </nav>
+  </div>
+
+  <div class="p-6">
+    <!-- Rolling Returns Tab -->
+    <div id="tab-rolling" class="tab-content">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Rolling 12-Month Returns
+      </h3>
+      <div id="rolling-chart" style="height: 300px;"></div>
+      <p class="text-sm text-gray-600 mt-2">
+        Each point shows the return over the previous 12 months.
+      </p>
     </div>
-    
-    <div class="p-6">
-        <!-- Rolling Returns Tab -->
-        <div id="tab-rolling" class="tab-content">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Rolling 12-Month Returns</h3>
-            <div id="rolling-chart" style="height: 300px;"></div>
-            <p class="text-sm text-gray-600 mt-2">Each point shows the return over the previous 12 months.</p>
-        </div>
-        
-        <!-- Yearly Returns Tab -->
-        <div id="tab-yearly" class="tab-content hidden">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Annual Performance</h3>
-            <div id="yearly-chart" style="height: 300px;"></div>
-        </div>
-        
-        <!-- Distribution Tab -->
-        <div id="tab-distribution" class="tab-content hidden">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Return Distribution & Risk Metrics</h3>
-            <div class="grid md:grid-cols-3 gap-6 mb-6">
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-sm text-gray-500 mb-1">VaR 95% (Monthly)</div>
-                    <div class="text-xl font-bold text-red-600">
-                        {% if results.distribution.var95 and results.distribution.var95 == results.distribution.var95 %}
-                            {{ "%.1f"|format(results.distribution.var95 * 100) }}%
-                        {% else %}
-                            —
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-sm text-gray-500 mb-1">CVaR 95% (Monthly)</div>
-                    <div class="text-xl font-bold text-red-700">
-                        {% if results.distribution.cvar95 and results.distribution.cvar95 == results.distribution.cvar95 %}
-                            {{ "%.1f"|format(results.distribution.cvar95 * 100) }}%
-                        {% else %}
-                            —
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <div class="text-sm text-gray-500 mb-1">Avg Monthly Return</div>
-                    <div class="text-xl font-bold text-green-600">
-                        {% if results.distribution.avg_monthly and results.distribution.avg_monthly == results.distribution.avg_monthly %}
-                            {{ "%.1f"|format(results.distribution.avg_monthly * 100) }}%
-                        {% else %}
-                            —
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            <div id="distribution-chart" style="height: 300px;"></div>
-            <p class="text-sm text-gray-600 mt-2">VaR = typical worst 5% month. CVaR = average of the worst 5% months.</p>
-        </div>
-        
-        <!-- Details Tab -->
-        <div id="tab-details" class="tab-content hidden">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Analysis Details</h3>
-            <div class="space-y-4">
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Fund Information</h4>
-                    <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Fund:</span>
-                            <span class="font-medium">{{ results.fund_name }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Analysis Period:</span>
-                            <span class="font-medium">{{ results.effective_start }} to {{ results.effective_end }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Rebalancing:</span>
-                            <span class="font-medium">{{ results.settings.rebalance }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Annual Fee:</span>
-                            <span class="font-medium">{{ "%.2f"|format(results.settings.fee_annual * 100) }}%</span>
-                        </div>
-                    </div>
-                </div>
-                
-                {% if results.missing_tickers %}
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Data Availability</h4>
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p class="text-sm text-yellow-800">
-                            <strong>Note:</strong> The following tickers had no data in the selected window and were excluded 
-                            (weights were renormalized): {{ results.missing_tickers|join(', ') }}
-                        </p>
-                    </div>
-                </div>
-                {% endif %}
-                
-                <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Disclaimer</h4>
-                    <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
-                        <p>
-                            This analysis is based on historical data and is for educational purposes only. 
-                            Past performance does not guarantee future results. This is not investment advice.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+    <!-- Yearly Returns Tab -->
+    <div id="tab-yearly" class="tab-content hidden">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Annual Performance
+      </h3>
+      <div id="yearly-chart" style="height: 300px;"></div>
     </div>
+
+    <!-- Distribution Tab -->
+    <div id="tab-distribution" class="tab-content hidden">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        Return Distribution & Risk Metrics
+      </h3>
+      <div class="grid md:grid-cols-3 gap-6 mb-6">
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <div class="text-sm text-gray-500 mb-1">VaR 95% (Monthly)</div>
+          <div class="text-xl font-bold text-red-600">
+            {% if results.distribution.var95 and results.distribution.var95 ==
+            results.distribution.var95 %} {{
+            "%.1f"|format(results.distribution.var95 * 100) }}% {% else %} — {%
+            endif %}
+          </div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <div class="text-sm text-gray-500 mb-1">CVaR 95% (Monthly)</div>
+          <div class="text-xl font-bold text-red-700">
+            {% if results.distribution.cvar95 and results.distribution.cvar95 ==
+            results.distribution.cvar95 %} {{
+            "%.1f"|format(results.distribution.cvar95 * 100) }}% {% else %} — {%
+            endif %}
+          </div>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded-lg">
+          <div class="text-sm text-gray-500 mb-1">Avg Monthly Return</div>
+          <div class="text-xl font-bold text-green-600">
+            {% if results.distribution.avg_monthly and
+            results.distribution.avg_monthly == results.distribution.avg_monthly
+            %} {{ "%.1f"|format(results.distribution.avg_monthly * 100) }}% {%
+            else %} — {% endif %}
+          </div>
+        </div>
+      </div>
+      <div id="distribution-chart" style="height: 300px;"></div>
+      <p class="text-sm text-gray-600 mt-2">
+        VaR = typical worst 5% month. CVaR = average of the worst 5% months.
+      </p>
+    </div>
+
+    <!-- Details Tab -->
+    <div id="tab-details" class="tab-content hidden">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Analysis Details</h3>
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">Fund Information</h4>
+          <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-600">Fund:</span>
+              <span class="font-medium">{{ results.fund_name }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Analysis Period:</span>
+              <span class="font-medium"
+                >{{ results.effective_start }} to {{ results.effective_end
+                }}</span
+              >
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Rebalancing:</span>
+              <span class="font-medium">{{ results.settings.rebalance }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600">Annual Fee:</span>
+              <span class="font-medium"
+                >{{ "%.2f"|format(results.settings.fee_annual * 100) }}%</span
+              >
+            </div>
+          </div>
+        </div>
+
+        {% if results.missing_tickers %}
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">Data Availability</h4>
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p class="text-sm text-yellow-800">
+              <strong>Note:</strong> The following tickers had no data in the
+              selected window and were excluded (weights were renormalized): {{
+              results.missing_tickers|join(', ') }}
+            </p>
+          </div>
+        </div>
+        {% endif %}
+
+        <div>
+          <h4 class="font-medium text-gray-900 mb-2">Disclaimer</h4>
+          <div class="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+            <p>
+              This analysis is based on historical data and is for educational
+              purposes only. Past performance does not guarantee future results.
+              This is not investment advice.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-// Store results data for JavaScript
-const resultsData = {{ results|tojson }};
+  // Store results data for JavaScript
+  const resultsData = {{ results|tojson }};
 
-// Performance Chart
-const performanceData = [{
-    x: resultsData.chart_data.dates,
-    y: resultsData.chart_data.portfolio,
-    type: 'scatter',
-    mode: 'lines',
-    name: 'Portfolio',
-    line: { color: '#2563eb', width: 3 }
-}];
+  // Performance Chart
+  const performanceData = [{
+      x: resultsData.chart_data.dates,
+      y: resultsData.chart_data.portfolio,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'Portfolio',
+      line: { color: '#2563eb', width: 3 }
+  }];
 
-// Add benchmark lines
-resultsData.chart_data.benchmarks.forEach((bench, index) => {
-    const colors = ['#dc2626', '#059669', '#d97706'];
-    performanceData.push({
-        x: resultsData.chart_data.dates,
-        y: Object.values(bench.data),
-        type: 'scatter',
-        mode: 'lines',
-        name: bench.name,
-        line: { color: colors[index % colors.length], width: 2 }
-    });
-});
+  // Add benchmark lines
+  resultsData.chart_data.benchmarks.forEach((bench, index) => {
+      const colors = ['#dc2626', '#059669', '#d97706'];
+      performanceData.push({
+          x: resultsData.chart_data.dates,
+          y: Object.values(bench.data),
+          type: 'scatter',
+          mode: 'lines',
+          name: bench.name,
+          line: { color: colors[index % colors.length], width: 2 }
+      });
+  });
 
-Plotly.newPlot('performance-chart', performanceData, {
-    title: 'Normalized Performance (Starting Value = 1.0)',
-    xaxis: { title: 'Date' },
-    yaxis: { title: 'Growth Multiple' },
-    showlegend: true,
-    responsive: true
-});
+  Plotly.newPlot('performance-chart', performanceData, {
+      title: 'Normalized Performance (Starting Value = 1.0)',
+      xaxis: { title: 'Date' },
+      yaxis: { title: 'Growth Multiple' },
+      showlegend: true,
+      responsive: true
+  });
 
-// Rolling Returns Chart
-if (resultsData.rolling_data.dates.length > 0) {
-    const rollingData = [{
-        x: resultsData.rolling_data.dates,
-        y: resultsData.rolling_data.returns.map(r => r * 100),
-        type: 'scatter',
-        mode: 'lines',
-        name: 'Rolling 12M Return',
-        line: { color: '#7c3aed' }
-    }];
-    
-    Plotly.newPlot('rolling-chart', rollingData, {
-        xaxis: { title: 'Date' },
-        yaxis: { title: 'Return (%)' },
-        showlegend: false,
-        responsive: true
-    });
-}
+  // Rolling Returns Chart
+  if (resultsData.rolling_data.dates.length > 0) {
+      const rollingData = [{
+          x: resultsData.rolling_data.dates,
+          y: resultsData.rolling_data.returns.map(r => r * 100),
+          type: 'scatter',
+          mode: 'lines',
+          name: 'Rolling 12M Return',
+          line: { color: '#7c3aed' }
+      }];
 
-// Yearly Returns Chart
-if (resultsData.yearly_data.years.length > 0) {
-    const yearlyData = [{
-        x: resultsData.yearly_data.years,
-        y: resultsData.yearly_data.returns.map(r => r * 100),
-        type: 'bar',
-        name: 'Annual Return',
-        marker: { color: '#059669' }
-    }];
-    
-    Plotly.newPlot('yearly-chart', yearlyData, {
-        xaxis: { title: 'Year' },
-        yaxis: { title: 'Return (%)' },
-        showlegend: false,
-        responsive: true
-    });
-}
+      Plotly.newPlot('rolling-chart', rollingData, {
+          xaxis: { title: 'Date' },
+          yaxis: { title: 'Return (%)' },
+          showlegend: false,
+          responsive: true
+      });
+  }
 
-// Distribution Chart
-if (resultsData.distribution.monthly_returns.length > 0) {
-    const distributionData = [{
-        x: resultsData.distribution.monthly_returns.map(r => r * 100),
-        type: 'histogram',
-        nbinsx: 30,
-        name: 'Monthly Returns',
-        marker: { color: '#3b82f6' }
-    }];
-    
-    Plotly.newPlot('distribution-chart', distributionData, {
-        title: 'Distribution of Monthly Returns',
-        xaxis: { title: 'Monthly Return (%)' },
-        yaxis: { title: 'Frequency' },
-        showlegend: false,
-        responsive: true
-    });
-}
+  // Yearly Returns Chart
+  if (resultsData.yearly_data.years.length > 0) {
+      const yearlyData = [{
+          x: resultsData.yearly_data.years,
+          y: resultsData.yearly_data.returns.map(r => r * 100),
+          type: 'bar',
+          name: 'Annual Return',
+          marker: { color: '#059669' }
+      }];
 
-// Tab functionality
-document.querySelectorAll('.tab-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const tabId = this.dataset.tab;
-        
-        // Update button states
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.classList.remove('border-blue-500', 'text-blue-600');
-            btn.classList.add('border-transparent', 'text-gray-500');
-        });
-        this.classList.add('border-blue-500', 'text-blue-600');
-        this.classList.remove('border-transparent', 'text-gray-500');
-        
-        // Update content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.add('hidden');
-        });
-        document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-    });
-});
+      Plotly.newPlot('yearly-chart', yearlyData, {
+          xaxis: { title: 'Year' },
+          yaxis: { title: 'Return (%)' },
+          showlegend: false,
+          responsive: true
+      });
+  }
 
-// Form submission
-document.getElementById('backtest-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const params = new URLSearchParams();
-    for (let [key, value] of formData.entries()) {
-        params.append(key, value);
-    }
-    window.location.href = `{{ url_for('fund_backtest', fund_id=fund_id) }}?${params.toString()}`;
-});
+  // Distribution Chart
+  if (resultsData.distribution.monthly_returns.length > 0) {
+      const distributionData = [{
+          x: resultsData.distribution.monthly_returns.map(r => r * 100),
+          type: 'histogram',
+          nbinsx: 30,
+          name: 'Monthly Returns',
+          marker: { color: '#3b82f6' }
+      }];
+
+      Plotly.newPlot('distribution-chart', distributionData, {
+          title: 'Distribution of Monthly Returns',
+          xaxis: { title: 'Monthly Return (%)' },
+          yaxis: { title: 'Frequency' },
+          showlegend: false,
+          responsive: true
+      });
+  }
+
+  // Tab functionality
+  document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', function() {
+          const tabId = this.dataset.tab;
+
+          // Update button states
+          document.querySelectorAll('.tab-button').forEach(btn => {
+              btn.classList.remove('border-blue-500', 'text-blue-600');
+              btn.classList.add('border-transparent', 'text-gray-500');
+          });
+          this.classList.add('border-blue-500', 'text-blue-600');
+          this.classList.remove('border-transparent', 'text-gray-500');
+
+          // Update content
+          document.querySelectorAll('.tab-content').forEach(content => {
+              content.classList.add('hidden');
+          });
+          document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      });
+  });
+
+  // Form submission
+  document.getElementById('backtest-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const params = new URLSearchParams();
+      for (let [key, value] of formData.entries()) {
+          params.append(key, value);
+      }
+      window.location.href = `{{ url_for('fund_backtest', fund_id=fund_id) }}?${params.toString()}`;
+  });
 </script>
 
 {% else %}
 <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-    <h2 class="text-lg font-semibold text-yellow-800 mb-2">No Analysis Available</h2>
-    <p class="text-yellow-700 mb-4">Please adjust your parameters and try again.</p>
-    <button onclick="document.getElementById('backtest-form').dispatchEvent(new Event('submit'))" 
-            class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700">
-        Run Analysis
-    </button>
+  <h2 class="text-lg font-semibold text-yellow-800 mb-2">
+    No Analysis Available
+  </h2>
+  <p class="text-yellow-700 mb-4">
+    Please adjust your parameters and try again.
+  </p>
+  <button
+    onclick="document.getElementById('backtest-form').dispatchEvent(new Event('submit'))"
+    class="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700"
+  >
+    Run Analysis
+  </button>
 </div>
-{% endif %}
-{% endblock %}
+{% endif %} {% endblock %}

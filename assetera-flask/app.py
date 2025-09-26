@@ -5,26 +5,28 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date, timedelta
 import os
 import json
+from config import Config
 from backtesting.engine import BacktestingEngine
 from backtesting.funds import FUNDS, BENCHMARKS
 from backtesting.utils import format_kpis
 from questionnaire.risk_profiler import RiskProfiler
 import logging
-
-logging.basicConfig(level=logging.DEBUG)
+from sqlalchemy.dialects.postgresql import JSONB
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///assetera.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+logging.basicConfig(level=logging.DEBUG)
+app.logger.setLevel(logging.DEBUG)
 
+config = Config()
+print(f"This is a config message : {config.SNOWFLAKE_USER}")
+
+app.config.from_object(Config)
+print(f"Im thop {app.config}")
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-
-# Initialize backtesting engine and risk profiler
-backtesting_engine = BacktestingEngine()
+# backtesting_engine = BacktestingEngine()
 risk_profiler = RiskProfiler()
 
 @login_manager.user_loader
@@ -33,22 +35,23 @@ def load_user(user_id):
 
 # Database Models
 class User(UserMixin, db.Model):
+    __tablename__ = 'users'  # ensure Supabase table name matches
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
+    password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     risk_profile = db.Column(db.String(10))  # F1, F2, F3, F4, F5
     questionnaire_completed = db.Column(db.Boolean, default=False)
     last_login = db.Column(db.DateTime)
-    
+
     questionnaire_responses = db.relationship('QuestionnaireResponse', backref='user', lazy=True)
-    
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def get_risk_profile_details(self):
         if self.risk_profile and self.risk_profile in FUNDS:
             return {
@@ -58,20 +61,22 @@ class User(UserMixin, db.Model):
                 'description': FUNDS[self.risk_profile]['description']
             }
         return None
-    
+
     def get_latest_questionnaire(self):
         return QuestionnaireResponse.query.filter_by(user_id=self.id).order_by(QuestionnaireResponse.created_at.desc()).first()
 
+
 class QuestionnaireResponse(db.Model):
+    __tablename__ = 'questionnaire_responses'  # ensure Supabase table name matches
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    responses = db.Column(db.Text)  # JSON string of responses
-    risk_score = db.Column(db.Float)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    responses = db.Column(JSONB)  # JSONB instead of Text
+    risk_score = db.Column(db.Numeric)  # PostgreSQL numeric
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     def get_responses_dict(self):
         try:
-            return json.loads(self.responses) if self.responses else {}
+            return dict(self.responses) if self.responses else {}
         except:
             return {}
 
@@ -92,10 +97,9 @@ def fund_preview(fund_id):
     # Default parameters for preview
     start_date = date.today() - timedelta(days=365*3)  # 3 years
     end_date = date.today()
-    flash('executing', 'info')
     
-    logging.debug("Debugging home route")
     try:
+        backtesting_engine = BacktestingEngine()
         results = backtesting_engine.run_backtest(
             fund_id=fund_id,
             start_date=start_date,
@@ -103,18 +107,13 @@ def fund_preview(fund_id):
             start_amount=100000,
             benchmarks=['SPY', '60/40']
         )
-        
-        with open("result.json", "w") as f:
-            json.dump(results, f, indent=4)  # indent makes it pretty
-        logging.debug(f"Debugging home route 2 {results}")
-        flash(f'datafetched {results}', 'info')
         return render_template('fund_preview.html', 
                              fund_id=fund_id, 
                              fund=FUNDS[fund_id],
                              results=results,
                              is_preview=True)
     except Exception as e:
-        flash(f'Error generating preview: {str(e)} {str(results)}', 'error')
+        flash(f'Error generating preview: {str(e)}', 'error')
         return redirect(url_for('index'))
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -167,31 +166,25 @@ def logout():
 @login_required
 def questionnaire():
     if request.method == 'POST':
-        responses = {}
-        for key in request.form:
-            if key.startswith('q_'):
-                responses[key] = request.form[key]
-        
-        # Calculate risk profile
-        logging.error(f"Responses: {responses}")
+        responses = {k: v for k, v in request.form.items() if k.startswith('q_')}
+
         risk_score, risk_profile = risk_profiler.calculate_risk_profile(responses)
-        
-        # Save responses
+
+        # Save responses in JSONB
         questionnaire_response = QuestionnaireResponse(
             user_id=current_user.id,
-            responses=json.dumps(responses),
+            responses=responses,
             risk_score=risk_score
         )
         db.session.add(questionnaire_response)
-        
-        # Update user profile
+
         current_user.risk_profile = risk_profile
         current_user.questionnaire_completed = True
         db.session.commit()
-        
+
         flash(f'Risk assessment complete! You\'ve been matched to {FUNDS[risk_profile]["name"]}', 'success')
         return redirect(url_for('dashboard'))
-    
+
     questions = risk_profiler.get_questions()
     return render_template('questionnaire.html', questions=questions)
 
@@ -245,11 +238,11 @@ def fund_backtest(fund_id):
     end_date_str = request.args.get('end_date', date.today().isoformat())
     start_amount = float(request.args.get('start_amount', 100000))
     benchmarks = request.args.getlist('benchmarks') or ['SPY', '60/40', 'GLD']
-    tip = (end_date_str,start_date_str,start_amount,benchmarks,"hello")
+    
     try:
         start_date = datetime.fromisoformat(start_date_str).date()
         end_date = datetime.fromisoformat(end_date_str).date()
-        
+        backtesting_engine = BacktestingEngine()
         results = backtesting_engine.run_backtest(
             fund_id=fund_id,
             start_date=start_date,
@@ -257,14 +250,14 @@ def fund_backtest(fund_id):
             start_amount=start_amount,
             benchmarks=benchmarks
         )
-        
+        print(f"results fetched {results['pct_pos_months']}")
         return render_template('fund_backtest.html', 
                              fund_id=fund_id, 
                              fund=FUNDS[fund_id],
                              results=results,
                              is_preview=False)
     except Exception as e:
-        flash(f'Error running backtesting: {str(e)} {str(tip)} {str(results)}', 'error')
+        flash(f'Error running backtest123: {str(e)}', 'error')
         return redirect(url_for('dashboard'))
 
 @app.route('/api/backtest', methods=['POST'])
@@ -274,6 +267,7 @@ def api_backtest():
     data = request.get_json()
     
     try:
+        backtesting_engine = BacktestingEngine()
         results = backtesting_engine.run_backtest(
             fund_id=data['fund_id'],
             start_date=datetime.fromisoformat(data['start_date']).date(),
@@ -288,38 +282,32 @@ def api_backtest():
 @app.route('/retake-questionnaire', methods=['GET', 'POST'])
 @login_required
 def retake_questionnaire():
-    """Allow users to retake the questionnaire and update their risk profile"""
     if request.method == 'POST':
-        responses = {}
-        for key in request.form:
-            if key.startswith('q_'):
-                responses[key] = request.form[key]
-        
-        # Calculate new risk profile
+        responses = {k: v for k, v in request.form.items() if k.startswith('q_')}
+
         risk_score, risk_profile = risk_profiler.calculate_risk_profile(responses)
-        
-        # Save new responses
+
         questionnaire_response = QuestionnaireResponse(
             user_id=current_user.id,
-            responses=json.dumps(responses),
+            responses=responses,
             risk_score=risk_score
         )
         db.session.add(questionnaire_response)
-        
-        # Update user profile
+
         old_profile = current_user.risk_profile
         current_user.risk_profile = risk_profile
         db.session.commit()
-        
+
         if old_profile != risk_profile:
             flash(f'Your risk profile has been updated! You\'re now matched to {FUNDS[risk_profile]["name"]}', 'success')
         else:
             flash(f'Assessment complete! You\'re still matched to {FUNDS[risk_profile]["name"]}', 'info')
-        
+
         return redirect(url_for('profile'))
-    
+
     questions = risk_profiler.get_questions()
     return render_template('retake_questionnaire.html', questions=questions)
+
 
 @app.errorhandler(404)
 def not_found_error(error):

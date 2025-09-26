@@ -7,3 +7,7 @@ pandas
 plotly
 requests
 python-dateutil
+gunicorn
+psycopg2-binary
+requests
+snowflake-connector-python

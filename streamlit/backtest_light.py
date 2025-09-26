@@ -430,7 +430,7 @@ st.markdown(
         <div class="ae-muted">| Backtesting Workbench (Prototype)</div>
       </div>
       <div class="ae-muted" style="margin-top:4px;">
-        An AssetEra research tool under Fidelity Investment — focused on five model funds. Not investment advice.
+        An AssetEra research tool under Blackrock Investment — focused on five model funds. Not investment advice.
       </div>
     </div>
     """,
