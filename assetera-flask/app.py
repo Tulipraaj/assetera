@@ -65,6 +65,18 @@ class User(UserMixin, db.Model):
     def get_latest_questionnaire(self):
         return QuestionnaireResponse.query.filter_by(user_id=self.id).order_by(QuestionnaireResponse.created_at.desc()).first()
 
+class UserDetails(db.Model):
+    __tablename__ = 'user_details'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    age = db.Column(db.Integer)
+    gender = db.Column(db.String(20))
+    marital_status = db.Column(db.String(20))
+    number_of_dependents = db.Column(db.Integer)
+    total_assets = db.Column(db.Numeric)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('details', uselist=False))
 
 class QuestionnaireResponse(db.Model):
     __tablename__ = 'questionnaire_responses'  # ensure Supabase table name matches
@@ -116,6 +128,35 @@ def fund_preview(fund_id):
         flash(f'Error generating preview: {str(e)}', 'error')
         return redirect(url_for('index'))
 
+
+@app.route('/pii', methods=['GET', 'POST'])
+@login_required
+def pii():
+    if request.method == 'POST':
+        age = request.form.get('age')
+        gender = request.form.get('gender')
+        marital_status = request.form.get('marital_status')
+        number_of_dependents = request.form.get('dependents')
+        total_assets = request.form.get('total_assets')
+
+        app.logger.debug(f"Received pewpew PII form data: age={age}, gender={gender}, marital_status={marital_status}, dependents={number_of_dependents}, total_assets={total_assets}")
+
+        user_details = UserDetails(
+            user_id=current_user.id,
+            age=int(age),
+            gender=gender,
+            marital_status=marital_status,
+            number_of_dependents=int(number_of_dependents),
+            total_assets=float(total_assets)
+        )
+        db.session.add(user_details)
+        db.session.commit()
+
+        return redirect(url_for('questionnaire'))
+
+    return render_template('personal_details.html')
+
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -132,7 +173,7 @@ def signup():
         db.session.commit()
         
         login_user(user)
-        return redirect(url_for('questionnaire'))
+        return redirect(url_for('pii'))
     
     return render_template('auth/signup.html')
 
@@ -169,7 +210,23 @@ def questionnaire():
         responses = {k: v for k, v in request.form.items() if k.startswith('q_')}
         print(responses,"hello these are responses")
         print(f"this is datatype {type(responses)} and this is keys {responses.keys()}")
-        risk_score, risk_profile = risk_profiler.calculate_risk_profile(responses)
+        
+        # Fetch personal details from DB
+        user_details = UserDetails.query.filter_by(user_id=current_user.id).first()
+        if not user_details:
+            flash("Please fill personal details first.", "error")
+            return redirect(url_for('personal_details'))
+
+        personal_data = {
+            "AGE": user_details.age,
+            "GENDER": user_details.gender,
+            "MARITAL_STATUS": user_details.marital_status,
+            "NUMBER_OF_DEPENDENTS": user_details.number_of_dependents,
+            "TOTAL_ASSETS": float(user_details.total_assets),
+        }
+
+        risk_score, risk_profile = risk_profiler.map_fund(personal_data, responses)
+
 
         # Save responses in JSONB
         questionnaire_response = QuestionnaireResponse(
@@ -179,11 +236,12 @@ def questionnaire():
         )
         db.session.add(questionnaire_response)
 
-        current_user.risk_profile = risk_profile
+        current_user.risk_profile = f"F{risk_profile}"
         current_user.questionnaire_completed = True
         db.session.commit()
 
-        flash(f'Risk assessment complete! You\'ve been matched to {FUNDS[risk_profile]["name"]}', 'success')
+        
+        flash(f'Risk assessment complete! You\'ve been matched to {FUNDS[current_user.risk_profile]["name"]}', 'success')
         return redirect(url_for('dashboard'))
 
     questions = risk_profiler.get_questions()
@@ -197,8 +255,9 @@ def dashboard():
     
     # Show all 5 funds for authenticated users
     all_funds = list(FUNDS.keys())
-    recommended_fund = current_user.risk_profile
     
+    recommended_fund = current_user.risk_profile
+    print("inside dashboard , recomended fund is ",recommended_fund)
     profile_details = current_user.get_risk_profile_details()
     latest_questionnaire = current_user.get_latest_questionnaire()
     

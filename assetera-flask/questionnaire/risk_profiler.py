@@ -3,9 +3,15 @@ Risk profiling questionnaire and mapping to funds
 """
 import math
 from collections import Counter
+import pickle
+import numpy as np
+import os
+# from jsonify
 
+MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'fund_model.pkl')
 class RiskProfiler:
     def __init__(self):
+        # self.model_path = 
         self.questions = [
             {
                 "id": "q_Years Experience",
@@ -103,10 +109,28 @@ class RiskProfiler:
     def get_questions(self):
         return self.questions
     
+    def get_fund_model(self):
+        print("this is before loading model")
+        with open(MODEL_PATH, 'rb') as f:
+            saved_objects = pickle.load(f)
+        
+        print(saved_objects.keys(), "this is saved obj")
+        model = saved_objects["model"]
+        print("model1")
+        scaler = saved_objects["scaler"]
+        print("scaler1")
+        label_encoders = saved_objects["label_encoders"]
+        print("lab1")
+        feature_names = saved_objects["feature_names"]
+        print('feature_names1')
+
+        print("returning")
+
+        return model,scaler,label_encoders,feature_names
+    
     def calculate_risk_profile(self, responses):
         """Calculate risk score and map to fund"""
-        total_score = 0
-        # max_possible_score = len(self.questions) * 5
+        
         risk_profiles = []
         for question in self.questions:
             response_key = f"q_{question['id'].split('_', 1)[1]}"
@@ -136,21 +160,89 @@ class RiskProfiler:
             risk_score = round(avg_risk)
         
 
-                # Map to funds based on risk score
-        if risk_score == 1:
-            fund = "F1"  # Very conservative
-        elif risk_score == 2:
-            fund = "F2"  # Conservative to moderate
-        elif risk_score == 3:
-            fund = "F3"  # Moderate
-        elif risk_score == 4:
-            fund = "F4"  # Moderate to aggressive
-        else:
-            fund = "F5"  # Aggressive
+        #         # Map to funds based on risk score
+        # if risk_score == 1:
+        #     fund = "F1"  # Very conservative
+        # elif risk_score == 2:
+        #     fund = "F2"  # Conservative to moderate
+        # elif risk_score == 3:
+        #     fund = "F3"  # Moderate
+        # elif risk_score == 4:
+        #     fund = "F4"  # Moderate to aggressive
+        # else:
+        #     fund = "F5"  # Aggressive
 
-        return risk_score, fund
+        return risk_score
+    
+    def get_age_bin(self,age):
+        bins = [0, 25, 40, 55, 70, 100]
+        # np.digitize returns bin index starting from 1, so subtract 1 for 0-based indexing
+        bin_index = np.digitize(age, bins, right=False) - 1
+
+        # clamp to last bin if value exceeds
+        bin_index = min(bin_index, len(bins) - 2)
+        return bin_index
     
 
-    # def calculate_risk_profile2(self,responses):
+    def preprocess_single_input(self,data, label_encoders,scaler,feature_names):
+        processed = data.copy()
+        print(f"processed is dev {processed}")
+        # --- Encode categorical features ---
+        for col in ["MARITAL_STATUS", "GENDER"]:
+            le = label_encoders[col]
+
+            # Handle unseen values safely
+            if data[col] not in le.classes_:
+                # temporarily add 'Unknown' if not seen
+                le.classes_ = np.append(le.classes_, 'Unknown')
+                processed[col] = 'Unknown'
+            processed[col] = le.transform([processed[col]])[0]
+
+        # --- Derived features ---
+        processed["ASSETS_PER_DEPENDENT"] = processed["TOTAL_ASSETS"] / (processed["NUMBER_OF_DEPENDENTS"] + 1)
+        processed["AGE_BINNED"] = self.get_age_bin(processed["AGE"])
+        processed["LOG_ASSETS"] = math.log(processed["TOTAL_ASSETS"])
+
+        # --- Arrange in model’s expected order ---
+        X = np.array([[processed[f] for f in feature_names]])
+        X_scaled = scaler.transform(X)
+        return X_scaled
+
+
+    def map_fund(self,personal_data,responses):
+        try:
+            
+            print("i started")
+            model,scaler,label_encoders,feature_names = self.get_fund_model()
+
+            # marital_status = personal_data.get('marital_status')
+            # gender = personal_data.get('gender')
+            # number_of_dependents = personal_data.get('number_of_dependents')
+            # age = personal_data.get('age')
+            # total_assets = personal_data.get('total_assets')
+            # age_binned = self.get_age_bin(age)
+            # assets_per_dependent = total_assets / (number_of_dependents + 1)
+            # log_assets = math.log(total_assets)
+
+            # # 3️⃣ Prepare input for model
+            # features = np.array([[marital_status, gender, number_of_dependents, age, total_assets]])
+
+            # 4️⃣ Make prediction
+            print("im here")
+            X_scaled = self.preprocess_single_input(personal_data, label_encoders,scaler,feature_names)
+            print("preprocessdeone")
+            prediction = model.predict(X_scaled)[0]
+
+            print("modelcal")
+            risk = self.calculate_risk_profile(responses)
+            # 5️⃣ Return prediction
+
+            print(f"Hellodev this is fund assigned {prediction}")
+            return risk , prediction + 1
+        
+
+
+        except Exception as e:
+            return {'error': str(e)}
 
         

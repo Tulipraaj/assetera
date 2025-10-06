@@ -1,0 +1,100 @@
+{% extends "base.html" %} {% block title %}Personal Details - AssetEra{%
+endblock %} {% block content %}
+<div class="max-w-3xl mx-auto bg-white rounded-xl p-8 mt-8 shadow">
+  <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">
+    Personal & Financial Details
+  </h2>
+
+  <form method="POST" id="personal-details-form">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Full Name</label>
+        <input
+          type="text"
+          name="name"
+          required
+          class="w-full border border-gray-300 rounded-lg p-2"
+        />
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Age</label>
+        <input
+          type="number"
+          name="age"
+          required
+          min="18"
+          class="w-full border border-gray-300 rounded-lg p-2"
+        />
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Gender</label>
+        <select
+          name="gender"
+          required
+          class="w-full border border-gray-300 rounded-lg p-2"
+        >
+          <option value="">Select</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2"
+          >Marital Status</label
+        >
+        <select
+          name="marital_status"
+          required
+          class="w-full border border-gray-300 rounded-lg p-2"
+        >
+          <option value="">Select</option>
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+          <option value="Divorced">Divorced</option>
+          <option value="Widowed">Widowed</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2"
+          >Number of Dependents</label
+        >
+        <input
+          type="number"
+          name="dependents"
+          required
+          min="0"
+          class="w-full border border-gray-300 rounded-lg p-2"
+        />
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2"
+          >Total Assets (₹)</label
+        >
+        <input
+          type="number"
+          name="total_assets"
+          required
+          min="0"
+          step="any"
+          class="w-full border border-gray-300 rounded-lg p-2"
+        />
+      </div>
+    </div>
+
+    <div class="mt-8 text-center">
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+      >
+        Continue to Questionnaire →
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
