@@ -19,3 +19,9 @@ class Config:
     SNOWFLAKE_DATABASE = os.environ.get('SNOWFLAKE_DATABASE')
     SNOWFLAKE_SCHEMA = os.environ.get('SNOWFLAKE_SCHEMA')
     SNOWFLAKE_ROLE = os.environ.get('SNOWFLAKE_ROLE')
+
+    DB_HOST = os.getenv("DB_HOST", "db.<your-supabase-host>.supabase.co")
+    DB_NAME = os.getenv("DB_NAME", "postgres")
+    DB_USER = os.getenv("DB_USER", "postgres")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "your_password")
+    DB_PORT = os.getenv("DB_PORT", "6543")  # usually 6543 for Supabase

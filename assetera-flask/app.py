@@ -94,10 +94,18 @@ class QuestionnaireResponse(db.Model):
 
 # Routes
 @app.route('/')
-def index():
+def landing():
+    return render_template('landing.html')
+
+# @app.route('/explore')
+# def explore():
+#     return render_template('explore_funds.html')
+
+@app.route('/backtest')
+def backtest():
     """Public landing page with preview of 2 funds"""
     preview_funds = ['F1', 'F2']  # Only show first 2 funds for non-authenticated users
-    return render_template('index.html', preview_funds=preview_funds, funds=FUNDS)
+    return render_template('backtest.html', preview_funds=preview_funds, funds=FUNDS)
 
 @app.route('/preview/<fund_id>')
 def fund_preview(fund_id):
@@ -126,7 +134,23 @@ def fund_preview(fund_id):
                              is_preview=True)
     except Exception as e:
         flash(f'Error generating preview: {str(e)}', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('backtest'))
+
+
+@app.route('/explore')
+def explore():
+    """List all funds with short descriptions"""
+    return render_template('explore_funds.html', funds=FUNDS)
+
+
+@app.route('/explore/<fund_id>')
+def explore_fund(fund_id):
+    """Show a single fund's short description and preview/backtest links"""
+    fund = FUNDS.get(fund_id)
+    if not fund:
+        flash('Fund not found', 'error')
+        return redirect(url_for('explore'))
+    return render_template('explore_funds.html', fund_id=fund_id, fund=fund)
 
 
 @app.route('/pii', methods=['GET', 'POST'])
@@ -201,7 +225,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('landing'))
 
 @app.route('/questionnaire', methods=['GET', 'POST'])
 @login_required

@@ -62,12 +62,14 @@ class SnowflakeClient:
         
         try:
             cursor = self.connection.cursor()
+            print("preparing execution tick")
             cursor.execute(query)
             
             # Fetch all results
+            print("prepaing fetch tick")
             results = cursor.fetchall()
             columns = [desc[0] for desc in cursor.description]
-            
+            print("getched all results tick")
             # Convert to DataFrame
             df = pd.DataFrame(results, columns=columns)
             cursor.close()

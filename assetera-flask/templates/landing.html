@@ -1,0 +1,90 @@
+{% extends "base.html" %} {% block content %}
+
+<!-- Hero -->
+<div class="text-center mb-12 pt-12">
+  <h1 class="text-4xl font-bold text-gray-900 mb-4">AssetEra</h1>
+  <p class="text-xl text-gray-700 max-w-3xl mx-auto mb-4">
+    Intelligent fund backtesting and investor insights for modern portfolios.
+  </p>
+  <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-6">
+    Our mission is to empower investors with transparent, data-driven analysis
+    so they can make confident decisions. We combine historical performance,
+    professional fund management and personalized risk profiling to give clear,
+    actionable recommendations.
+  </p>
+
+  <!-- CTA Buttons (aligned) -->
+  <div class="inline-flex items-center space-x-4">
+    {% if current_user.is_authenticated %}
+    <a
+      href="{{ url_for('dashboard') }}"
+      class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700"
+    >
+      Backtest Funds
+    </a>
+    {% else %}
+    <a
+      href="{{ url_for('backtest') }}"
+      class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700"
+    >
+      Backtest Funds
+    </a>
+    {% endif %}
+
+    <a
+      href="{{ url_for('explore') }}"
+      class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700"
+    >
+      Explore Funds
+    </a>
+
+    <a
+      href="{{ url_for('signup') }}"
+      class="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50"
+    >
+      Sign Up
+    </a>
+  </div>
+</div>
+
+<!-- Intro / Features (short) -->
+<div class="grid md:grid-cols-3 gap-6 mb-12">
+  <div class="text-center p-6 bg-white rounded-xl card-shadow">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Backtesting</h3>
+    <p class="text-gray-600 text-sm">
+      Run historical simulations across our funds to see how strategies would
+      have performed.
+    </p>
+  </div>
+
+  <div class="text-center p-6 bg-white rounded-xl card-shadow">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Risk Profiling</h3>
+    <p class="text-gray-600 text-sm">
+      Answer a short questionnaire to get matched to funds that fit your
+      objectives.
+    </p>
+  </div>
+
+  <div class="text-center p-6 bg-white rounded-xl card-shadow">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Transparency</h3>
+    <p class="text-gray-600 text-sm">
+      Clear fees, performance metrics, and comparisons—no black boxes.
+    </p>
+  </div>
+</div>
+
+<!-- More details -->
+<div class="bg-white rounded-xl p-8 card-shadow">
+  <h2 class="text-2xl font-semibold text-gray-900 mb-4">Why AssetEra?</h2>
+  <ul class="list-disc pl-5 text-gray-600 space-y-2">
+    <li>Accurate backtesting using professionally managed fund portfolios.</li>
+    <li>Personalized recommendations based on proven risk models.</li>
+    <li>
+      Fast previews available without signup so you can explore before
+      committing.
+    </li>
+    <li>Secure storage and privacy-first handling of your data.</li>
+  </ul>
+</div>
+
+{% endblock %}

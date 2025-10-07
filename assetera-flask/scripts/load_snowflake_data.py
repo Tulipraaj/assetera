@@ -438,7 +438,7 @@ def main():
     print("=" * 50)
     
     # Configuration
-    start_date = date(2015, 1, 1)  # 10 years of data
+    start_date = date(2000, 1, 1)  # 10 years of data
     end_date = date.today()
     
     print(f"Data range: {start_date} to {end_date}")

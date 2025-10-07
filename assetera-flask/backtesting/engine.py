@@ -10,7 +10,8 @@ from typing import Dict, List, Tuple, Optional
 import numpy as np
 import pandas as pd
 from .funds import FUNDS, BENCHMARKS
-from data.snowflake_client import get_snowflake_client
+from data.supabase_client import get_supabase_client
+
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -26,7 +27,7 @@ TRADING_DAYS = 252
 
 class BacktestingEngine:
     def __init__(self):
-        self.snowflake_client = get_snowflake_client()
+        self.supabase_client = get_supabase_client()
         self.cache = {}  # Simple in-memory cache
         self.cache_ttl = 3600 * 4  # 4 hours (longer since data is from database)
     
@@ -51,8 +52,9 @@ class BacktestingEngine:
         
         try:
             # Fetch from Snowflake
-            df = self.snowflake_client.fetch_price_data(tickers, start, end)
-            
+            print("starting to fetch data tick")
+            df = self.supabase_client.fetch_price_data(tickers, start, end)
+            print("data fetched tick")
             if not df.empty:
                 # Cache the result
                 self.cache[cache_key] = {
