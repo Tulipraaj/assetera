@@ -1,9 +1,9 @@
 import { executeQuery } from '@/lib/snowflake';
 import { Customer } from '@/lib/types';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   context: { params: { id: string } }
 ) {
   const { id } = context.params;
