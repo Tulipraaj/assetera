@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
   request: Request,
-  context: any
+  context: { params: Promise<{ id: string }> }
 ) {
-  const id = context.params.id;
+  const { id } = await context.params;
   
   try {
     const query = `
