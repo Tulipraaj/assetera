@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use as usePromise } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { Customer, CustomerUpdatePayload } from '@/lib/types';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import ProfileCard from '@/app/components/ProfileCard';
 
-export default function CustomerProfile({ params }: { params: { id: string } }) {
+
+export default function CustomerProfile({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = usePromise(params);
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editedCustomer, setEditedCustomer] = useState<{
@@ -16,9 +18,9 @@ export default function CustomerProfile({ params }: { params: { id: string } }) 
   }>({});
 
   const { data: customer, isLoading, error } = useQuery({
-    queryKey: ['customer', params.id],
+    queryKey: ['customer', id],
     queryFn: async () => {
-      const response = await fetch(`/api/customers/${params.id}`);
+      const response = await fetch(`/api/customers/${id}`);
       if (!response.ok) {
         throw new Error('Failed to fetch customer');
       }
