@@ -3,10 +3,10 @@ import { Customer } from '@/lib/types';
 import { NextResponse } from 'next/server';
 
 export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  context: any
 ) {
-  const { id } = await params;
+  const id = context.params.id;
   
   try {
     const query = `
