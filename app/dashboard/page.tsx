@@ -88,11 +88,11 @@ export default function Home() {
     '5': 'Very High',
   };
   const fundIdNameMap: Record<string, string> = {
-    '1': 'Core Income',
-    '2': 'Pro Core',
+    '1': 'Shield Fund',
+    '2': 'Core Fund',
     '3': 'Pro Growth',
-    '4': 'Redeem Surge 31',
-    '5': 'Bridge Growth 26',
+    '4': 'Vertex 26  Fund',
+    '5': 'Alpha 31 Fund',
   };
 
   if (isLoading) {
