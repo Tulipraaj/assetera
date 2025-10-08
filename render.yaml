@@ -2,8 +2,10 @@ services:
   - type: web
     name: advisor-portal
     env: node
+    branch: internal_application
     buildCommand: npm install && npm run build
     startCommand: npm start
+    rootDir: .
     envVars:
       - key: NODE_ENV
         value: production
