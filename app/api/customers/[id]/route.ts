@@ -2,15 +2,9 @@ import { executeQuery } from '@/lib/snowflake';
 import { Customer } from '@/lib/types';
 import { NextRequest, NextResponse } from 'next/server';
 
-type Props = {
-  params: {
-    id: string
-  }
-}
-
 export async function GET(
-  request: NextRequest,
-  { params }: Props
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   const { id } = params;
   
