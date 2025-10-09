@@ -12,22 +12,33 @@ from backtesting.utils import format_kpis
 from questionnaire.risk_profiler import RiskProfiler
 import logging
 from sqlalchemy.dialects.postgresql import JSONB
+# from chat_service.chat_service import ChatService 
+from data.supabase_client import  get_supabase_client
+import uuid
+
+# DEFAULT_ADVISOR_ID = 'e67393b1-4513-4c68-86d8-b079a3dbdfca'
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 app.logger.setLevel(logging.DEBUG)
 
 config = Config()
+# chat_service = ChatService(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
 print(f"This is a config message : {config.SNOWFLAKE_USER}")
 
 app.config.from_object(Config)
 # print(f"Im thop {app.config}")
 db = SQLAlchemy(app)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 # backtesting_engine = BacktestingEngine()
 risk_profiler = RiskProfiler()
+# init_chat_service(config.SUPABASE_URL, config.SUPABASE_ANON_KEY)
+
+DEFAULT_ADVISOR_ID = 'e67393b1-4513-4c68-86d8-b079a3dbdfca'
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -290,7 +301,9 @@ def dashboard():
                          funds=FUNDS,
                          recommended_fund=recommended_fund,
                          profile_details=profile_details,
-                         latest_questionnaire=latest_questionnaire)
+                         latest_questionnaire=latest_questionnaire,
+                         SUPABASE_URL=config.SUPABASE_URL,
+                         SUPABASE_ANON_KEY=config.SUPABASE_ANON_KEY)
 
 @app.route('/profile')
 @login_required
@@ -393,6 +406,99 @@ def retake_questionnaire():
 
     questions = risk_profiler.get_questions()
     return render_template('retake_questionnaire.html', questions=questions)
+
+
+@app.route('/api/chat/messages', methods=['GET'])
+@login_required
+def get_chat_messages():
+    client = get_supabase_client()
+    msgs = client.fetch_messages(customer_id=current_user.id, advisor_id=DEFAULT_ADVISOR_ID, limit=200)
+    return jsonify({'success': True, 'messages': msgs})
+
+@app.route('/api/chat/send', methods=['POST'])
+@login_required
+def send_chat_message():
+    data = request.get_json(force=True) or {}
+    content = (data.get('content') or '').strip()
+    if not content:
+        return jsonify({'success': False, 'error': 'Message cannot be empty'}), 400
+
+    client = get_supabase_client()
+    msg = client.insert_message(
+        customer_id=current_user.id,
+        advisor_id=DEFAULT_ADVISOR_ID,
+        sender='customer',
+        content=content
+    )
+    if not msg:
+        # current_app.logger.error("insert_message returned None")
+        return jsonify({'success': False, 'error': 'Insert failed'}), 500
+
+    return jsonify({'success': True, 'message': msg})
+
+# @app.route('/api/chat/mark-read', methods=['POST'])
+# @login_required
+# def mark_messages_read():
+#     """Mark messages as read"""
+#     try:
+#         data = request.get_json()
+        
+#         if not data:
+#             return jsonify({
+#                 'success': False,
+#                 'error': 'No data provided'
+#             }), 400
+        
+#         message_ids = data.get('message_ids', [])
+        
+#         if not message_ids:
+#             return jsonify({
+#                 'success': True,
+#                 'message': 'No messages to mark as read'
+#             })
+        
+#         app.logger.info(f"Marking {len(message_ids)} messages as read")
+        
+#         if chat_service.mark_as_read(message_ids):
+#             return jsonify({'success': True})
+#         else:
+#             return jsonify({
+#                 'success': False,
+#                 'error': 'Failed to mark messages as read'
+#             }), 500
+            
+#     except Exception as e:
+#         app.logger.error(f"Error in mark_messages_read: {str(e)}", exc_info=True)
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
+
+# @app.route('/api/chat/unread-count', methods=['GET'])
+# @login_required
+# def get_unread_count():
+#     """Get unread message count"""
+#     try:
+#         # Use the hardcoded advisor ID
+#         advisor_id = DEFAULT_ADVISOR_ID
+        
+#         app.logger.info(f"Getting unread count for customer_id: {current_user.id}, advisor_id: {advisor_id}")
+        
+#         count = chat_service.get_unread_count(
+#             customer_id=current_user.id,
+#             advisor_id=advisor_id
+#         )
+        
+#         return jsonify({
+#             'success': True,
+#             'count': count
+#         })
+#     except Exception as e:
+#         app.logger.error(f"Error in get_unread_count: {str(e)}", exc_info=True)
+#         return jsonify({
+#             'success': False,
+#             'error': str(e)
+#         }), 500
 
 
 @app.errorhandler(404)

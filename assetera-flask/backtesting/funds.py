@@ -4,30 +4,30 @@ Fund definitions and benchmarks - converted from Streamlit app
 
 FUNDS = {
     "F1": {
-        "name": "Fund 1 — Core Income (low risk)",
+        "name": "Shield ",
         "allocations": {
             "LQD": 0.50, "IEF": 0.20, "GLD": 0.10, "VEA": 0.10,
             "MSFT": 0.02, "APH": 0.02, "GWW": 0.02, "PH": 0.02, "BSX": 0.02,
         },
-        "default_fee": 0.002,  # 0.20%
+        "default_fee": 0.01443,  # 0.20%
         "default_rebalance": "Annual",
         "risk_level": "Low",
         "description": "Conservative income-focused portfolio with high allocation to bonds and defensive assets."
     },
     "F2": {
-        "name": "Fund 2 — Pro Core (~12% in 10y)",
+        "name": "Core ",
         "allocations": {
             "LQD": 0.30, "IEF": 0.10, "GLD": 0.08, "VEA": 0.12, "SPY": 0.12,
             "MSFT": 0.03, "APH": 0.03, "GWW": 0.03, "PH": 0.03, "BSX": 0.03, "ETN": 0.03,
             "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
         },
-        "default_fee": 0.002,
+        "default_fee": 0.01224,
         "default_rebalance": "Annual",
         "risk_level": "Moderate",
         "description": "Balanced portfolio targeting steady growth with moderate risk exposure."
     },
     "F3": {
-        "name": "Fund 3 — Pro Growth 17 (RS≈3.10)",
+        "name": "Pulse 17 ",
         "allocations": {
             "LQD": 0.098, "IEF": 0.098, "SPY": 0.060, "VEA": 0.120, "GLD": 0.112,
             "NVDA": 0.025, "AVGO": 0.025, "MSFT": 0.025, "KLAC": 0.025,
@@ -36,32 +36,32 @@ FUNDS = {
             "IDCC": 0.0302857143, "RDNT": 0.0302857143, "DY": 0.0302857143,
             "GPI": 0.0302857143, "ACLS": 0.0302857143, "TTMI": 0.0302857143, "AGM": 0.0302857143,
         },
-        "default_fee": 0.002,
+        "default_fee": 0.008319,
         "default_rebalance": "Annual",
         "risk_level": "Moderate-High",
         "description": "Growth-oriented portfolio with diversified equity exposure and moderate bond allocation."
     },
     "F4": {
-        "name": "Fund 4 — Redeem Surge 31 (max RS for >30%)",
+        "name": "Vertex 26 ",
         "allocations": {
             "NVDA": 0.24, "AVGO": 0.12, "KLAC": 0.06, "CDNS": 0.06,
             "IDCC": 0.0125, "RDNT": 0.0125, "ACLS": 0.0125, "GPI": 0.0125,
             "VWO": 0.32, "GLD": 0.15,
         },
-        "default_fee": 0.002,
+        "default_fee": 0.004112,
         "default_rebalance": "Annual",
         "risk_level": "High",
         "description": "High-growth aggressive portfolio with significant technology and emerging market exposure."
     },
     "F5": {
-        "name": "Fund 5 — Bridge Growth 26 (between F3 & F4)",
+        "name": "Alpha 31",
         "allocations": {
             "NVDA": 0.10, "AVGO": 0.07, "KLAC": 0.06, "CDNS": 0.05, "MSFT": 0.05, "ETN": 0.05,
             "EME": 0.04, "PWR": 0.04, "FAST": 0.025, "BWXT": 0.025,
             "IDCC": 0.06, "RDNT": 0.06, "ACLS": 0.06, "GPI": 0.05, "AGM": 0.05, "TTMI": 0.05,
             "VEA": 0.08, "GLD": 0.04, "VWO": 0.02, "LQD": 0.012, "IEF": 0.008,
         },
-        "default_fee": 0.002,
+        "default_fee": 0.014559,
         "default_rebalance": "Annual",
         "risk_level": "High",
         "description": "Bridge portfolio between moderate-high and high risk, balancing growth with some stability."

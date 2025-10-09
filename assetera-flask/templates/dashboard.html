@@ -1,5 +1,6 @@
 {% extends "base.html" %} {% block title %}Dashboard - AssetEra{% endblock %} {%
 block content %}
+
 <div class="mb-8">
   <div class="flex justify-between items-start">
     <div>
@@ -56,96 +57,63 @@ block content %}
 <!-- All Funds Grid -->
 <div class="mb-8">
   <h2 class="text-2xl font-semibold text-gray-900 mb-6">All Available Funds</h2>
-  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <div class="flex flex-wrap justify-center gap-6">
     {% for fund_id in all_funds %}
-    <div
-      class="bg-white rounded-xl card-shadow p-6 {% if fund_id == recommended_fund %}ring-2 ring-blue-500{% endif %}"
-    >
-      <div class="flex justify-between items-start mb-4">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1">
-            {{ fund_id }}
-          </h3>
-          <p class="text-sm text-gray-600">{{ funds[fund_id].name }}</p>
-        </div>
-        {% if fund_id == recommended_fund %}
-        <span
-          class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
-        >
-          Recommended
-        </span>
-        {% endif %}
-      </div>
-
-      <p class="text-gray-600 text-sm mb-4">{{ funds[fund_id].description }}</p>
-
-      <div class="flex justify-between items-center mb-4">
-        <div class="text-sm">
-          <div class="text-gray-500">Risk Level</div>
-          <div class="font-medium text-gray-900">
-            {{ funds[fund_id].risk_level }}
-          </div>
-        </div>
-        <div class="text-sm text-right">
-          <div class="text-gray-500">Annual Fee</div>
-          <div class="font-medium text-gray-900">
-            {{ "%.2f"|format(funds[fund_id].default_fee * 100) }}%
-          </div>
-        </div>
-      </div>
-
-      <a
-        href="{{ url_for('fund_backtest', fund_id=fund_id) }}"
-        class="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 text-center block"
+    <div class="w-full md:w-1/2 lg:w-1/3">
+      <div
+        class="bg-white rounded-xl card-shadow p-6 {% if fund_id == recommended_fund %}ring-2 ring-blue-500{% endif %}"
       >
-        Analyze Performance
-      </a>
-    </div>
-    {% endfor %}
-    <!-- <div
-      class="bg-white rounded-xl card-shadow p-6 border-2 border-dashed border-gray-300"
-    >
-      <div class="text-center">
-        <div
-          class="bg-gradient-to-r from-purple-100 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-        >
-          <svg
-            class="w-8 h-8 text-purple-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 mb-1">
+              {{ fund_id }}
+            </h3>
+            <p class="text-sm text-gray-600">{{ funds[fund_id].name }}</p>
+          </div>
+          {% if fund_id == recommended_fund %}
+          <span
+            class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            ></path>
-          </svg>
+            Recommended
+          </span>
+          {% endif %}
         </div>
 
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">
-          Make your own fund
-        </h3>
-        <p class="text-gray-600 text-sm mb-6">
-          Make your own fund and let us know what you want
+        <p class="text-gray-600 text-sm mb-4">
+          {{ funds[fund_id].description }}
         </p>
 
-        <button
-          class="w-full bg-gray-300 text-gray-500 py-2 px-4 rounded-lg cursor-not-allowed"
-          disabled
+        <div class="flex justify-between items-center mb-4">
+          <div class="text-sm">
+            <div class="text-gray-500">Risk Level</div>
+            <div class="font-medium text-gray-900">
+              {{ funds[fund_id].risk_level }}
+            </div>
+          </div>
+          <div class="text-sm text-right">
+            <div class="text-gray-500">Annual Fee</div>
+            <div class="font-medium text-gray-900">
+              {{ "%.2f"|format(funds[fund_id].default_fee * 100) }}%
+            </div>
+          </div>
+        </div>
+
+        <a
+          href="{{ url_for('fund_backtest', fund_id=fund_id) }}"
+          class="w-full bg-gray-900 text-white py-2 px-4 rounded-lg hover:bg-gray-800 text-center block"
         >
-          Coming Soon
-        </button>
+          Analyze Performance
+        </a>
       </div>
-    </div> -->
+    </div>
+    {% endfor %}
   </div>
 </div>
 
 <!-- Quick Actions -->
 <div class="bg-white rounded-xl card-shadow p-8">
   <h2 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
-  <div class="grid md:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
     <div
       class="text-center p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
     >
@@ -170,9 +138,13 @@ block content %}
       <p class="text-sm text-gray-600 mb-4">
         Side-by-side performance comparison
       </p>
-      <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
-        Coming Soon
-      </button>
+      <div class="mt-4">
+        <a
+          href="#"
+          class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+          >Compare Funds</a
+        >
+      </div>
     </div>
 
     <div
@@ -227,10 +199,372 @@ block content %}
       </div>
       <h3 class="font-semibold text-gray-900 mb-2">Export Data</h3>
       <p class="text-sm text-gray-600 mb-4">Download performance reports</p>
-      <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
-        Coming Soon
+      <div class="mt-4">
+        <a
+          href="#"
+          class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+          >Export Data</a
+        >
+      </div>
+    </div>
+
+    <div
+      class="text-center p-6 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+    >
+      <div
+        class="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
+      >
+        <svg
+          class="w-6 h-6 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+          ></path>
+        </svg>
+      </div>
+      <h3 class="font-semibold text-gray-900 mb-2">Chat with fund advisor</h3>
+      <p class="text-sm text-gray-600 mb-4">
+        Ask questions and get guidance from our advisory team.
+      </p>
+      <div class="mt-4">
+        <a
+          href="#"
+          id="chat-advisor-btn"
+          class="text-blue-600 hover:text-blue-700 font-medium text-sm"
+          >Start Chat</a
+        >
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Widget -->
+<div
+  id="chat-widget"
+  class="hidden fixed sm:bottom-4 sm:right-4 bottom-0 inset-x-0 sm:inset-x-auto z-50 sm:w-96 w-full sm:rounded-xl rounded-none bg-white border border-gray-200 shadow-2xl flex flex-col max-h-[70vh] sm:max-h-[70vh]"
+>
+  <div class="flex items-center justify-between px-4 py-3 border-b">
+    <div class="flex items-center gap-2">
+      <div
+        class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"
+      >
+        <svg
+          class="w-5 h-5 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 8h10M7 12h6m-6 4h10M5 20l4-4H7a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H9l-4 4z"
+          />
+        </svg>
+      </div>
+      <div>
+        <div class="text-sm font-semibold text-gray-900">Fund Advisor</div>
+        <div class="text-xs text-gray-500">
+          Typically replies within a few minutes
+        </div>
+      </div>
+    </div>
+    <button
+      id="chat-minimize-btn"
+      class="p-2 text-gray-400 hover:text-gray-600"
+      aria-label="Minimize chat"
+      title="Minimize"
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M20 12H4"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <div
+    id="chat-messages"
+    class="flex-1 overflow-y-auto px-4 py-3 space-y-3 bg-gray-50"
+  ></div>
+
+  <div class="border-t p-3 bg-white">
+    <div class="flex items-end gap-2">
+      <textarea
+        id="chat-input"
+        class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        rows="1"
+        placeholder="Type your message..."
+      ></textarea>
+      <button
+        id="chat-send-btn"
+        class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-2 rounded-lg"
+      >
+        Send
       </button>
     </div>
   </div>
 </div>
+
+<!-- Minimized chat bar -->
+<div
+  id="chat-minimized-bar"
+  class="hidden fixed sm:bottom-4 sm:right-4 bottom-0 inset-x-0 sm:inset-x-auto z-50 sm:w-56 w-full sm:rounded-lg rounded-none bg-white border border-gray-200 shadow-lg p-3 flex items-center justify-between"
+>
+  <div class="flex items-center gap-3">
+    <div
+      class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center"
+    >
+      <svg
+        class="w-4 h-4 text-blue-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+        />
+      </svg>
+    </div>
+    <div class="text-sm">
+      <div class="font-semibold text-gray-900">Fund Advisor</div>
+      <div class="text-xs text-gray-500">Tap to restore chat</div>
+    </div>
+  </div>
+  <div>
+    <button id="chat-restore-btn" class="text-blue-600 text-sm font-medium">
+      Open
+    </button>
+  </div>
+</div>
+
+<!-- Supabase and Chat Script -->
+<!-- Supabase and Chat Script -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "{{ SUPABASE_URL }}";
+  const SUPABASE_ANON_KEY = "{{ SUPABASE_ANON_KEY }}";
+  const { createClient } = supabase;
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  (function () {
+    const chatWidget = document.getElementById("chat-widget");
+    const chatMinimizedBar = document.getElementById("chat-minimized-bar");
+    const chatBtn = document.getElementById("chat-advisor-btn");
+    const chatMinimizeBtn = document.getElementById("chat-minimize-btn");
+    const chatRestoreBtn = document.getElementById("chat-restore-btn");
+    const chatMessages = document.getElementById("chat-messages");
+    const chatInput = document.getElementById("chat-input");
+    const chatSendBtn = document.getElementById("chat-send-btn");
+
+    const ADVISOR_ID = "e67393b1-4513-4c68-86d8-b079a3dbdfca";
+    const CURRENT_USER_ID = parseInt("{{ current_user.id }}");
+
+    let realtimeChannel = null;
+    let isInitialized = false;
+    let isSending = false;
+
+    function formatTimestamp(d) {
+      const date = new Date(d);
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mm = String(date.getMinutes()).padStart(2, "0");
+      return `${hh}:${mm}`;
+    }
+
+    function addMessage(
+      text,
+      sender = "customer",
+      timestamp = null,
+      messageId = null
+    ) {
+      const wrapper = document.createElement("div");
+      wrapper.className =
+        "flex flex-col max-w-[80%] " +
+        (sender === "customer" ? "ml-auto items-end" : "mr-auto items-start");
+      if (messageId) wrapper.dataset.messageId = messageId;
+
+      const bubble = document.createElement("div");
+      bubble.className =
+        "px-3 py-2 rounded-lg text-sm " +
+        (sender === "customer"
+          ? "bg-blue-600 text-white"
+          : "bg-white text-gray-900 border border-gray-200");
+      bubble.textContent = text;
+
+      const ts = document.createElement("div");
+      ts.className = "text-xs text-gray-400 mt-1";
+      ts.textContent = formatTimestamp(timestamp || new Date());
+
+      wrapper.appendChild(bubble);
+      wrapper.appendChild(ts);
+      chatMessages.appendChild(wrapper);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showWelcomeMessage() {
+      addMessage(
+        "Hello! I'm your fund advisor. How can I help you today?",
+        "advisor",
+        new Date()
+      );
+    }
+
+    async function loadMessages() {
+      try {
+        const response = await fetch(`/api/chat/messages`);
+        const data = await response.json();
+        if (data.success && Array.isArray(data.messages)) {
+          chatMessages.innerHTML = "";
+          if (data.messages.length === 0) {
+            showWelcomeMessage();
+          } else {
+            data.messages.forEach((msg) => {
+              addMessage(msg.content, msg.sender, msg.created_at, msg.id);
+            });
+          }
+        } else {
+          showWelcomeMessage();
+        }
+      } catch (err) {
+        console.error("Error loading messages:", err);
+        showWelcomeMessage();
+      }
+    }
+
+    async function sendMessage(content) {
+      if (isSending) return;
+      try {
+        isSending = true;
+        chatSendBtn.disabled = true;
+        chatSendBtn.textContent = "Sending...";
+        const res = await fetch("/api/chat/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+        const data = await res.json();
+        if (!data.success) {
+          alert("Failed to send message: " + (data.error || "Unknown error"));
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Network error. Please check your connection.");
+      } finally {
+        isSending = false;
+        chatSendBtn.disabled = false;
+        chatSendBtn.textContent = "Send";
+      }
+    }
+
+    function subscribeToMessages() {
+      if (realtimeChannel) {
+        supabaseClient.removeChannel(realtimeChannel);
+      }
+      realtimeChannel = supabaseClient
+        .channel(`messages-${CURRENT_USER_ID}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "messages",
+            filter: `customer_id=eq.${CURRENT_USER_ID}`,
+          },
+          (payload) => {
+            const msg = payload.new;
+            // Prevent duplicate add if already present
+            if (chatMessages.querySelector(`[data-message-id="${msg.id}"]`))
+              return;
+            addMessage(msg.content, msg.sender, msg.created_at, msg.id);
+          }
+        )
+        .subscribe((status) => {
+          console.log("Realtime subscription status:", status);
+        });
+    }
+
+    if (chatBtn) {
+      chatBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        chatWidget.classList.remove("hidden");
+        chatMinimizedBar.classList.add("hidden");
+        if (!isInitialized) {
+          loadMessages();
+          subscribeToMessages();
+          isInitialized = true;
+        }
+        setTimeout(() => {
+          chatInput.focus();
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+      });
+    }
+
+    if (chatMinimizeBtn) {
+      chatMinimizeBtn.addEventListener("click", function () {
+        chatWidget.classList.add("hidden");
+        chatMinimizedBar.classList.remove("hidden");
+      });
+    }
+
+    if (chatRestoreBtn) {
+      chatRestoreBtn.addEventListener("click", function () {
+        chatWidget.classList.remove("hidden");
+        chatMinimizedBar.classList.add("hidden");
+        setTimeout(() => {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          chatInput.focus();
+        }, 100);
+      });
+    }
+
+    if (chatSendBtn) {
+      chatSendBtn.addEventListener("click", async function () {
+        const text = chatInput.value.trim();
+        if (!text || isSending) return;
+        addMessage(text, "customer"); // optimistic
+        chatInput.value = "";
+        await sendMessage(text);
+      });
+      chatInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          chatSendBtn.click();
+        }
+      });
+    }
+
+    const mo = new MutationObserver(() => {
+      if (
+        chatMessages.scrollHeight - chatMessages.scrollTop <=
+        chatMessages.clientHeight + 100
+      ) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    });
+    mo.observe(chatMessages, { childList: true });
+
+    window.addEventListener("beforeunload", () => {
+      if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+    });
+  })();
+</script>
+
 {% endblock %}

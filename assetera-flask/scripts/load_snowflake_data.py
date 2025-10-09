@@ -20,6 +20,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import Config
+from backtesting.funds import FUNDS
 warnings.filterwarnings('ignore')
 
 # =========================
@@ -47,51 +48,51 @@ SNOWFLAKE_CONFIG = {
 
 print(SNOWFLAKE_CONFIG,"THIS IS YOUR CONFIG")
 # Fund definitions (same as your app)
-FUNDS = {
-    "F1": {
-        "name": "Fund 1 — Core Income (low risk)",
-        "allocations": {
-            "LQD": 0.50, "IEF": 0.20, "GLD": 0.10, "VEA": 0.10,
-            "MSFT": 0.02, "APH": 0.02, "GWW": 0.02, "PH": 0.02, "BSX": 0.02,
-        }
-    },
-    "F2": {
-        "name": "Fund 2 — Pro Core (~12% in 10y)",
-        "allocations": {
-            "LQD": 0.30, "IEF": 0.10, "GLD": 0.08, "VEA": 0.12, "SPY": 0.12,
-            "MSFT": 0.03, "APH": 0.03, "GWW": 0.03, "PH": 0.03, "BSX": 0.03, "ETN": 0.03,
-            "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
-        }
-    },
-    "F3": {
-        "name": "Fund 3 — Pro Growth 17 (RS≈3.10)",
-        "allocations": {
-            "LQD": 0.098, "IEF": 0.098, "SPY": 0.060, "VEA": 0.120, "GLD": 0.112,
-            "NVDA": 0.025, "AVGO": 0.025, "MSFT": 0.025, "KLAC": 0.025,
-            "CDNS": 0.025, "ETN": 0.025, "PH": 0.025, "HEI": 0.025,
-            "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
-            "IDCC": 0.0302857143, "RDNT": 0.0302857143, "DY": 0.0302857143,
-            "GPI": 0.0302857143, "ACLS": 0.0302857143, "TTMI": 0.0302857143, "AGM": 0.0302857143,
-        }
-    },
-    "F4": {
-        "name": "Fund 4 — Redeem Surge 31 (max RS for >30%)",
-        "allocations": {
-            "NVDA": 0.24, "AVGO": 0.12, "KLAC": 0.06, "CDNS": 0.06,
-            "IDCC": 0.0125, "RDNT": 0.0125, "ACLS": 0.0125, "GPI": 0.0125,
-            "VWO": 0.32, "GLD": 0.15,
-        }
-    },
-    "F5": {
-        "name": "Fund 5 — Bridge Growth 26 (between F3 & F4)",
-        "allocations": {
-            "NVDA": 0.10, "AVGO": 0.07, "KLAC": 0.06, "CDNS": 0.05, "MSFT": 0.05, "ETN": 0.05,
-            "EME": 0.04, "PWR": 0.04, "FAST": 0.025, "BWXT": 0.025,
-            "IDCC": 0.06, "RDNT": 0.06, "ACLS": 0.06, "GPI": 0.05, "AGM": 0.05, "TTMI": 0.05,
-            "VEA": 0.08, "GLD": 0.04, "VWO": 0.02, "LQD": 0.012, "IEF": 0.008,
-        }
-    }
-}
+# FUNDS = {
+#     "F1": {
+#         "name": "Fund 1 — Core Income (low risk)",
+#         "allocations": {
+#             "LQD": 0.50, "IEF": 0.20, "GLD": 0.10, "VEA": 0.10,
+#             "MSFT": 0.02, "APH": 0.02, "GWW": 0.02, "PH": 0.02, "BSX": 0.02,
+#         }
+#     },
+#     "F2": {
+#         "name": "Fund 2 — Pro Core (~12% in 10y)",
+#         "allocations": {
+#             "LQD": 0.30, "IEF": 0.10, "GLD": 0.08, "VEA": 0.12, "SPY": 0.12,
+#             "MSFT": 0.03, "APH": 0.03, "GWW": 0.03, "PH": 0.03, "BSX": 0.03, "ETN": 0.03,
+#             "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
+#         }
+#     },
+#     "F3": {
+#         "name": "Fund 3 — Pro Growth 17 (RS≈3.10)",
+#         "allocations": {
+#             "LQD": 0.098, "IEF": 0.098, "SPY": 0.060, "VEA": 0.120, "GLD": 0.112,
+#             "NVDA": 0.025, "AVGO": 0.025, "MSFT": 0.025, "KLAC": 0.025,
+#             "CDNS": 0.025, "ETN": 0.025, "PH": 0.025, "HEI": 0.025,
+#             "EME": 0.025, "PWR": 0.025, "FAST": 0.025, "BWXT": 0.025,
+#             "IDCC": 0.0302857143, "RDNT": 0.0302857143, "DY": 0.0302857143,
+#             "GPI": 0.0302857143, "ACLS": 0.0302857143, "TTMI": 0.0302857143, "AGM": 0.0302857143,
+#         }
+#     },
+#     "F4": {
+#         "name": "Fund 4 — Redeem Surge 31 (max RS for >30%)",
+#         "allocations": {
+#             "NVDA": 0.24, "AVGO": 0.12, "KLAC": 0.06, "CDNS": 0.06,
+#             "IDCC": 0.0125, "RDNT": 0.0125, "ACLS": 0.0125, "GPI": 0.0125,
+#             "VWO": 0.32, "GLD": 0.15,
+#         }
+#     },
+#     "F5": {
+#         "name": "Fund 5 — Bridge Growth 26 (between F3 & F4)",
+#         "allocations": {
+#             "NVDA": 0.10, "AVGO": 0.07, "KLAC": 0.06, "CDNS": 0.05, "MSFT": 0.05, "ETN": 0.05,
+#             "EME": 0.04, "PWR": 0.04, "FAST": 0.025, "BWXT": 0.025,
+#             "IDCC": 0.06, "RDNT": 0.06, "ACLS": 0.06, "GPI": 0.05, "AGM": 0.05, "TTMI": 0.05,
+#             "VEA": 0.08, "GLD": 0.04, "VWO": 0.02, "LQD": 0.012, "IEF": 0.008,
+#         }
+#     }
+# }
 
 BENCHMARKS = {
     "SPY": {"name": "S&P 500 (SPY)", "ticker": "SPY"},
@@ -105,14 +106,17 @@ BENCHMARKS = {
 def get_all_tickers() -> List[str]:
     """Get all unique tickers from funds and benchmarks"""
     tickers = set()
-    
+    # print(FUNDS)
+    print(BENCHMARKS)
+    print(FUNDS)
     # Add fund tickers
     for fund_data in FUNDS.values():
         tickers.update(fund_data["allocations"].keys())
     
     # Add benchmark tickers
-    for bench_data in BENCHMARKS.values():
-        tickers.add(bench_data["ticker"])
+    for bench_data in BENCHMARKS.keys():
+        if len(bench_data) < 4:
+            tickers.add(bench_data)
     
     return sorted(list(tickers))
 

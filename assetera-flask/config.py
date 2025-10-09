@@ -25,3 +25,6 @@ class Config:
     DB_USER = os.getenv("DB_USER", "postgres")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "your_password")
     DB_PORT = os.getenv("DB_PORT", "6543")  # usually 6543 for Supabase
+
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
